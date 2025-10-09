@@ -13,7 +13,6 @@
 - [Подробная инструкция](#подробная-инструкция)
 - [Что устанавливается](#что-устанавливается)
 - [Безопасность](#безопасность)
-- [Устранение неполадок](#устранение-неполадок)
 
 ## ✨ Возможности
 
@@ -164,5 +163,5 @@ sudo fail2ban-client set <jail> unbanip <ip>
 
 ## Гайды
 
-- [Установка SSH ключей](https://github.com/haxgun/server-setup/blob/main/guides/ssh.md)
-- [Подключение SSH к Github](https://github.com/haxgun/server-setup/blob/main/guides/github.md)
+- [Установка SSH ключей](https://github.com/haxgun/server/blob/main/guides/ssh.md)
+- [Подключение SSH к Github](https://github.com/haxgun/server/blob/main/guides/github.md)
