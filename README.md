@@ -8,6 +8,7 @@
 
 - [Установка SSH ключей](https://github.com/haxgun/server/blob/main/guides/ssh.md)
 - [Подключение SSH к Github](https://github.com/haxgun/server/blob/main/guides/github.md)
+- [Добавление пользователя](https://github.com/haxgun/server/blob/main/guides/new_user.md)
 
 ---
 
