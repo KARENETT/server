@@ -2,17 +2,14 @@
 
 Автоматическая настройка и конфигурация Linux-сервера с установкой современного стека разработки, включая ZSH, Docker, Node.js, Bun и другие инструменты.
 
-## 📋 Содержание
+---
 
-- [Возможности](#возможности)
-- [Быстрый старт](#быстрый-старт)
-- [SSH ключи](#ssh-ключи)
-  - [Генерация SSH ключей](#генерация-ssh-ключей)
-  - [Добавление SSH ключа на сервер](#добавление-ssh-ключа-на-сервер)
-  - [Настройка SSH ключа для GitHub](#настройка-ssh-ключа-для-github)
-- [Подробная инструкция](#подробная-инструкция)
-- [Что устанавливается](#что-устанавливается)
-- [Безопасность](#безопасность)
+## Гайды
+
+- [Установка SSH ключей](https://github.com/haxgun/server/blob/main/guides/ssh.md)
+- [Подключение SSH к Github](https://github.com/haxgun/server/blob/main/guides/github.md)
+
+---
 
 ## ✨ Возможности
 
@@ -34,14 +31,14 @@
 **Клонируйте репозиторий**
 
 ```bash
-git clone https://github.com/haxgun/server-setup.git
-cd server-setup
+git clone https://github.com/haxgun/server.git
+cd server
 ```
 
 **Или скачайте напрямую**
 
 ```bash
-wget https://raw.githubusercontent.com/haxgun/server-setup/main/setup.sh
+wget https://raw.githubusercontent.com/haxgun/server/main/setup.sh
 ```
 
 ### 2. Дайте права на выполнение
@@ -158,10 +155,3 @@ sudo fail2ban-client status
 ```bash
 sudo fail2ban-client set <jail> unbanip <ip>
 ```
-
----
-
-## Гайды
-
-- [Установка SSH ключей](https://github.com/haxgun/server/blob/main/guides/ssh.md)
-- [Подключение SSH к Github](https://github.com/haxgun/server/blob/main/guides/github.md)
