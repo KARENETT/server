@@ -8,8 +8,8 @@ IFS=$'\n\t'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Загрузка конфигурации
-source "$SCRIPT_DIR/config.sh"
-source "$SCRIPT_DIR/utils.sh"
+source "$SCRIPT_DIR/scripts/config.sh"
+source "$SCRIPT_DIR/scripts/utils.sh"
 
 # Загрузка модулей
 source "$MODULES_DIR/user.sh"
