@@ -18,7 +18,7 @@ install_packages() {
 
     echo ""
     info "Будут установлены следующие пакеты:"
-    printf '%s\n' "${BASIC_PACKAGES[@]}" | column -c 80
+    printf '%s\n' "${BASIC_PACKAGES[@]}" | pr -t -3
     echo ""
     read -p "Продолжить установку? (Y/n): " -n 1 -r
     echo ""
