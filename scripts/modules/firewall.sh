@@ -1,6 +1,6 @@
 setup_firewall() {
     log "=========================================="
-    log "Настройка UFW + Fail2Ban"
+    log "Настройка UFW + Fail2Ban + отключение ICMP"
     log "=========================================="
 
     echo ""
@@ -38,29 +38,43 @@ setup_firewall() {
     sudo ufw --force enable && check_success "UFW включён и базовые порты открыты"
 
     # ────────────────────────────────────────────────
-    # Отключаем входящий/исходящий ping (ICMP echo)
-    # Самый надёжный способ — через ufw user rules (не трогаем before.rules)
+    # Отключаем входящий и исходящий ping (ICMP echo)
     # ────────────────────────────────────────────────
-    log "Отключаем двухсторонний ICMP (echo-request / echo-reply)..."
+    log "Отключаем двухсторонний ICMP (ping)..."
 
-    # Блокируем входящий ping (кто-то пингует сервер)
-    sudo ufw insert 1 deny proto icmp from any to any icmp-type echo-request comment 'Block incoming ping'
+    # Способ 1 — самый надёжный: sysctl (ядерный уровень)
+    local sysctl_file="/etc/sysctl.d/99-disable-ping.conf"
+    sudo tee "$sysctl_file" > /dev/null << 'EOF'
+net.ipv4.icmp_echo_ignore_all = 1
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv6.icmp.echo_ignore_all = 1
+EOF
 
-    # Блокируем исходящий ping (сервер не может пинговать наружу)
-    sudo ufw insert 2 deny proto icmp from any to any icmp-type echo-reply   comment 'Block outgoing ping reply'
+    sudo sysctl --system 2>/dev/null || sudo sysctl -p "$sysctl_file"
+    check_success "ICMP echo-request заблокирован на уровне ядра (сервер не отвечает на пинг)"
 
-    # Опционально: блокируем broadcast/multicast ICMP (защита от атак)
-    sudo ufw insert 3 deny proto icmp from any to any icmp-type destination-unreachable comment 'Block some icmp types'
+    # Способ 2 — дополнительно через UFW before.rules (если sysctl по какой-то причине не подходит)
+    # Добавляем правила в конец секции *filter перед COMMIT — безопасно
+    local RULES_FILE="/etc/ufw/before.rules"
+    sudo cp "$RULES_FILE" "${RULES_FILE}.bak.$(date +%F_%H%M%S)"
 
-    sudo ufw reload && check_success "ICMP echo (ping) полностью отключён через UFW"
+    sudo sed -i '/^\*filter/a \
+# Block incoming ICMP echo-request (ping to server)\
+-A ufw-before-input -p icmp --icmp-type 8 -j DROP\
+# Block outgoing ICMP echo-reply (if server tries to respond)\
+-A ufw-before-output -p icmp --icmp-type 0 -j DROP' "$RULES_FILE"
 
-    # Альтернатива/дополнение: sysctl (ядерный уровень, работает даже без UFW)
-    echo "net.ipv4.icmp_echo_ignore_all = 1"         | sudo tee -a /etc/sysctl.d/99-no-ping.conf
-    echo "net.ipv4.icmp_echo_ignore_broadcasts = 1" | sudo tee -a /etc/sysctl.d/99-no-ping.conf
-    sudo sysctl -p /etc/sysctl.d/99-no-ping.conf     2>/dev/null || true
-    log "Дополнительно: sysctl icmp_echo_ignore_all = 1 применён"
+    # Проверяем, что синтаксис валиден
+    if sudo iptables-restore -t filter -n < "$RULES_FILE" 2>/dev/null; then
+        sudo ufw reload && check_success "Дополнительно заблокирован ICMP echo в before.rules"
+    else
+        log "Ошибка в синтаксисе before.rules — откатываем изменения"
+        sudo cp "${RULES_FILE}.bak.$(date +%F_%H%M%S)" "$RULES_FILE" 2>/dev/null
+        sudo ufw reload
+        warning "ICMP заблокирован только через sysctl"
+    fi
 
-    # Fail2Ban (без изменений, только мелкая правка)
+    # Fail2Ban
     log "Настройка Fail2Ban..."
     if ! command -v fail2ban-client &> /dev/null; then
         retry_command "sudo apt install -y fail2ban" && check_success "Fail2Ban установлен"
@@ -77,11 +91,18 @@ ignoreip = 127.0.0.1/8 ::1
 enabled  = true
 port     = ${ssh_port}
 maxretry = 3
+
+[nginx-http-auth]
+enabled  = true
 EOF
 
     sudo systemctl restart fail2ban
-    sudo systemctl enable fail2ban  && check_success "Fail2Ban настроен и добавлен в автозагрузку"
+    sudo systemctl enable fail2ban && check_success "Fail2Ban настроен и добавлен в автозагрузку"
 
-    log "✅ Файрвол, ICMP-защита и Fail2Ban готовы"
-    log "Проверьте: sudo ufw status verbose"
+    log "✅ Файрвол, защита от пинга и Fail2Ban готовы"
+    log "Проверьте:"
+    log "  sudo ufw status verbose"
+    log "  cat /proc/sys/net/ipv4/icmp_echo_ignore_all   # должно быть 1"
+    log "  ping 8.8.8.8   # с сервера — должно работать (исходящий)"
+    log "  ping ваш_IP_сервера   # с другого хоста — не должен отвечать"
 }
