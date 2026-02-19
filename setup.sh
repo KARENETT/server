@@ -91,6 +91,7 @@ EOF
     echo -e " ${GREEN}8)${NC} Установить Node.js, Bun и PM2"
     echo -e " ${GREEN}9)${NC} Установить uv"
     echo -e " ${GREEN}10)${NC} Установить Docker"
+    echo -e " ${GREEN}11)${NC} Применить sysctl hardening (BBR + производительность)"
     echo -e " ${RED}0)${NC} Выход"
     echo ""
     echo -e "${BLUE}Лог сохраняется в: $LOG_FILE${NC}"
@@ -117,6 +118,7 @@ main() {
             8) setup_nodejs ;;
             9) setup_uv ;;
             10) setup_docker ;;
+            11) setup_sysctl_hardening ;;
             0) log "Выход из программы"; exit 0 ;;
             *) error "Неверный выбор. Попробуйте снова." ;;
         esac
