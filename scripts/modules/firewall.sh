@@ -30,35 +30,37 @@ setup_firewall() {
     sudo ufw allow "${trojan_port}/tcp" comment 'TROJAN'
     sudo ufw allow "${hysteria_port}/udp" comment 'Hysteria 2 QUIC'
 
-    # Явно блокируем входящий ICMP echo-request (ping к серверу)
-    sudo ufw insert 1 deny proto icmp to any comment 'Block incoming ICMP echo-request (ping)'
-
     sudo ufw --force enable && check_success "UFW включён и базовые порты открыты"
 
     # ────────────────────────────────────────────────
-    # Отключаем входящий и исходящий ping (ICMP echo)
+    # Отключаем входящий ping (ICMP echo-request) на уровне ядра
     # ────────────────────────────────────────────────
-    log "Отключаем двухсторонний ICMP (ping)..."
+    log "Отключаем входящий ICMP echo-request (ping к серверу)..."
 
-    # Самый надёжный способ — sysctl (ядерный уровень)
     local sysctl_file="/etc/sysctl.d/99-disable-ping.conf"
     sudo tee "$sysctl_file" > /dev/null << 'EOF'
+# Ignore all incoming ICMP echo requests (ping to this server)
 net.ipv4.icmp_echo_ignore_all = 1
 net.ipv4.icmp_echo_ignore_broadcasts = 1
+
+# Для IPv6, если используется
 net.ipv6.icmp.echo_ignore_all = 1
 EOF
 
     sudo sysctl --system 2>/dev/null || sudo sysctl -p "$sysctl_file"
 
-    # Проверяем, применилось ли значение
+    # Проверка применения (критично!)
+    sleep 1  # даём время на применение
     if [ "$(cat /proc/sys/net/ipv4/icmp_echo_ignore_all)" = "1" ]; then
-        check_success "ICMP echo-request заблокирован на уровне ядра (сервер не отвечает на пинг)"
+        check_success "Входящий ping заблокирован на уровне ядра (сервер не отвечает)"
     else
-        warning "Не удалось применить sysctl net.ipv4.icmp_echo_ignore_all=1"
-        log "Проверьте вручную: cat /proc/sys/net/ipv4/icmp_echo_ignore_all"
+        warning "sysctl net.ipv4.icmp_echo_ignore_all НЕ применился!"
+        log "Проверьте вручную:"
+        log "  cat /proc/sys/net/ipv4/icmp_echo_ignore_all"
+        log "  grep icmp /etc/ufw/sysctl.conf   # если там =0 — удалите или закомментируйте"
     fi
 
-    # Fail2Ban
+    # Fail2Ban (твой блок без изменений)
     log "Настройка Fail2Ban..."
     if ! command -v fail2ban-client &> /dev/null; then
         retry_command "sudo apt install -y fail2ban" && check_success "Fail2Ban установлен"
@@ -84,9 +86,8 @@ EOF
     sudo systemctl enable fail2ban && check_success "Fail2Ban настроен и добавлен в автозагрузку"
 
     log "✅ Файрвол, защита от пинга и Fail2Ban готовы"
-    log "Проверьте:"
-    log "  sudo ufw status verbose"
-    log "  cat /proc/sys/net/ipv4/icmp_echo_ignore_all          # должно быть 1"
-    log "  ping 8.8.8.8                                       # с сервера — должно работать (исходящий)"
-    log "  ping ваш_IP_сервера                                # с другого хоста — не должен отвечать"
+    log "Проверьте после перезагрузки:"
+    log "  cat /proc/sys/net/ipv4/icmp_echo_ignore_all          # → 1"
+    log "  ping 8.8.8.8                                         # с сервера — работает"
+    log "  ping ${YOUR_SERVER_IP}                               # с другого хоста — НЕ должен отвечать"
 }
