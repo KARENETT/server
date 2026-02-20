@@ -17,8 +17,8 @@ setup_firewall() {
     read -p "TROJAN порт (TCP, например 8443): " trojan_port
     trojan_port=${trojan_port:-8443}
 
-    read -p "Hysteria 2 порт (UDP, например 8444): " hysteria_port
-    hysteria_port=${hysteria_port:-8444}
+    read -p "Hysteria 2 порт (UDP, например 1935): " hysteria_port
+    hysteria_port=${hysteria_port:-1935}
 
     log "Сброс и базовая настройка UFW..."
     sudo ufw --force reset
@@ -33,7 +33,7 @@ setup_firewall() {
     sudo ufw allow "${ss_port}/tcp"    comment 'Shadowsocks TCP'
     sudo ufw allow "${ss_port}/udp"    comment 'Shadowsocks UDP'
     sudo ufw allow "${trojan_port}/tcp" comment 'TROJAN'
-    sudo ufw allow "${hysteria_port}/udp" comment 'Hysteria 2'
+    sudo ufw allow "${hysteria_port}/udp" comment 'Hysteria 2 QUIC'
 
     sudo ufw --force enable && check_success "UFW включён и базовые порты открыты"
 
