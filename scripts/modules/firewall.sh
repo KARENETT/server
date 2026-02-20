@@ -89,5 +89,4 @@ EOF
     log "Проверьте после перезагрузки:"
     log "  cat /proc/sys/net/ipv4/icmp_echo_ignore_all          # → 1"
     log "  ping 8.8.8.8                                         # с сервера — работает"
-    log "  ping ${YOUR_SERVER_IP}                               # с другого хоста — НЕ должен отвечать"
 }
