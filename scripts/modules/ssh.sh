@@ -21,6 +21,7 @@ setup_ssh() {
 
         sudo sed -i "s/^#*Port .*/Port $ssh_port/" /etc/ssh/sshd_config
         sudo sed -i 's/^#*PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config
+        sudo sed -i 's/^#*AllowUsers .*/AllowUsers haxgun/' /etc/ssh/sshd_config
         sudo sed -i 's/^#*PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
         sudo sed -i 's/^#*PubkeyAuthentication .*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
         sudo sed -i 's/^#*PermitEmptyPasswords .*/PermitEmptyPasswords no/' /etc/ssh/sshd_config
@@ -28,6 +29,8 @@ setup_ssh() {
         sudo sed -i 's/^#*PermitUserEnvironment .*/PermitUserEnvironment no/' /etc/ssh/sshd_config
         sudo sed -i 's/^#*MaxAuthTries .*/MaxAuthTries 3/' /etc/ssh/sshd_config
         sudo sed -i 's/^#*LoginGraceTime .*/LoginGraceTime 20/' /etc/ssh/sshd_config
+        sudo sed -i 's/^#*X11Forwarding .*/X11Forwarding no/' /etc/ssh/sshd_config
+        sudo sed -i 's/^#*UseDNS .*/UseDNS no/' /etc/ssh/sshd_config
 
         if sudo sshd -t; then
             sudo systemctl enable ssh
