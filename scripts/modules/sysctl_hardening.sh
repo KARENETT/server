@@ -1,5 +1,8 @@
 #!/bin/bash
 
+log_ok()    { echo -e "${GREEN}[✅ OK]${NC} $1"; }
+log_warn()  { echo -e "${YELLOW}[⚠️ WARN]${NC} $1"; }
+
 setup_sysctl_hardening() {
     log "=========================================="
     log "Sysctl hardening + оптимизация под Hysteria 2 / VLESS"
