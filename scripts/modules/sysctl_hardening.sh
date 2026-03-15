@@ -20,7 +20,7 @@ setup_sysctl_hardening() {
         log_warn "BBR недоступен, используем CUBIC"
     fi
 
-    cat > "$SYSCTL_FILE" <<EOF
+    sudo cat > "$SYSCTL_FILE" <<EOF
 # =============================================================================
 # Server Network Optimization
 # =============================================================================
@@ -57,6 +57,6 @@ net.ipv4.tcp_fastopen = 3
 fs.file-max = 2097152
 EOF
 
-    sysctl --system > /dev/null 2>&1
+    sudo sysctl --system > /dev/null 2>&1
     log_ok "Настройки sysctl применены. Пинг отключен."
 }
