@@ -13,6 +13,8 @@ source "$SCRIPT_DIR/scripts/utils.sh"
 # Загрузка модулей
 source "$MODULES_DIR/user.sh"
 source "$MODULES_DIR/system.sh"
+source "$MODULES_DIR/swap.sh"
+source "$MODULES_DIR/ulimits.sh"
 source "$MODULES_DIR/packages.sh"
 source "$MODULES_DIR/ssh.sh"
 source "$MODULES_DIR/firewall.sh"
@@ -20,6 +22,7 @@ source "$MODULES_DIR/zsh.sh"
 source "$MODULES_DIR/nodejs.sh"
 source "$MODULES_DIR/uv.sh"
 source "$MODULES_DIR/docker.sh"
+source "$MODULES_DIR/xanmod.sh"
 source "$MODULES_DIR/sysctl_hardening.sh"
 
 # Проверка прав
@@ -37,6 +40,8 @@ install_all() {
     check_internet || return 1
 
     update_system
+    setup_swap
+    setup_ulimits
     install_packages
     setup_ssh
     setup_firewall
@@ -44,6 +49,7 @@ install_all() {
     setup_nodejs
     setup_uv
     setup_docker
+    setup_xanmod
     setup_sysctl_hardening
 
     mkdir -p ~/projects ~/scripts ~/downloads ~/backup && check_success "Структура каталогов создана"
@@ -85,13 +91,16 @@ EOF
     echo -e " ${GREEN}2)${NC} Добавить пользователя"
     echo -e " ${GREEN}3)${NC} Обновить Ubuntu Server"
     echo -e " ${GREEN}4)${NC} Установить базовые пакеты"
-    echo -e " ${GREEN}5)${NC} Настроить SSH"
-    echo -e " ${GREEN}6)${NC} Настроить файрвол UFW и Fail2Ban"
-    echo -e " ${GREEN}7)${NC} Установить и настроить ZSH + Oh My Zsh"
-    echo -e " ${GREEN}8)${NC} Установить Node.js, Bun и PM2"
-    echo -e " ${GREEN}9)${NC} Установить uv"
-    echo -e " ${GREEN}10)${NC} Установить Docker"
-    echo -e " ${GREEN}11)${NC} Применить sysctl hardening (BBR + производительность)"
+    echo -e " ${GREEN}5)${NC} Настроить SWAP"
+    echo -e " ${GREEN}6)${NC} Настроить ulimits"
+    echo -e " ${GREEN}7)${NC} Настроить SSH"
+    echo -e " ${GREEN}8)${NC} Настроить файрвол UFW и Fail2Ban"
+    echo -e " ${GREEN}9)${NC} Установить и настроить ZSH + Oh My Zsh"
+    echo -e " ${GREEN}10)${NC} Установить Node.js, Bun и PM2"
+    echo -e " ${GREEN}11)${NC} Установить uv"
+    echo -e " ${GREEN}12)${NC} Установить Docker"
+    echo -e " ${GREEN}13)${NC} Установить XanMod Kernel"
+    echo -e " ${GREEN}14)${NC} Применить sysctl hardening (BBR + производительность)"
     echo -e " ${RED}0)${NC} Выход"
     echo ""
     echo -e "${BLUE}Лог сохраняется в: $LOG_FILE${NC}"
@@ -112,13 +121,16 @@ main() {
             2) add_user ;;
             3) update_system ;;
             4) install_packages ;;
-            5) setup_ssh ;;
-            6) setup_firewall ;;
-            7) setup_zsh ;;
-            8) setup_nodejs ;;
-            9) setup_uv ;;
-            10) setup_docker ;;
-            11) setup_sysctl_hardening ;;
+            5) setup_swap ;;
+            6) setup_ulimits ;;
+            7) setup_ssh ;;
+            8) setup_firewall ;;
+            9) setup_zsh ;;
+            10) setup_nodejs ;;
+            11) setup_uv ;;
+            12) setup_docker ;;
+            13) setup_xanmod ;;
+            14) setup_sysctl_hardening ;;
             0) log "Выход из программы"; exit 0 ;;
             *) error "Неверный выбор. Попробуйте снова." ;;
         esac
