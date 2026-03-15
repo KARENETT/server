@@ -40,6 +40,7 @@ install_all() {
     check_internet || return 1
 
     update_system
+    setup_xanmod
     setup_swap
     setup_ulimits
     install_packages
@@ -49,7 +50,6 @@ install_all() {
     setup_nodejs
     setup_uv
     setup_docker
-    setup_xanmod
     setup_sysctl_hardening
 
     mkdir -p ~/projects ~/scripts ~/downloads ~/backup && check_success "Структура каталогов создана"
