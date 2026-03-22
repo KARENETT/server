@@ -21,40 +21,97 @@ setup_sysctl_hardening() {
     fi
 
     cat <<EOF | sudo tee "$SYSCTL_FILE" >/dev/null
-# =============================================================================
-# Server Network Optimization
-# =============================================================================
+### Безопасность IPv6 — отключаем, если не используется
+net.ipv6.conf.all.disable_ipv6 = 1
+net.ipv6.conf.default.disable_ipv6 = 1
+net.ipv6.conf.lo.disable_ipv6 = 1
 
-# --- SECURITY: BLOCK ALL PINGS (ICMP) ---
-net.ipv4.icmp_echo_ignore_all = 1
-# ----------------------------------------
+net.ipv6.conf.all.forwarding = 0
+net.ipv6.conf.all.accept_ra = 0
+net.ipv6.conf.default.accept_ra = 0
+net.ipv6.conf.all.autoconf = 0
+net.ipv6.conf.default.autoconf = 0
+net.ipv6.conf.all.use_tempaddr = 2
+net.ipv6.conf.default.use_tempaddr = 2
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+net.ipv6.conf.all.accept_source_route = 0
+net.ipv6.conf.default.accept_source_route = 0
 
-# --- BBR & Queue Management ---
+### IPv4 — маршрутизация и защита
+net.ipv4.ip_forward = 0
+
+# Защита от спуфинга и редиректов
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+
+# Логирование подозрительных пакетов
+net.ipv4.conf.all.log_martians = 1
+net.ipv4.conf.default.log_martians = 1
+
+### ICMP — безопасность и ограничение флуда
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_ratelimit = 100
+net.ipv4.icmp_ratemask = 88089
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+
+### TCP — защита и оптимизация
+# SYN flood защита
+net.ipv4.tcp_syncookies = 1
+
+# Улучшенные параметры TCP
+net.ipv4.tcp_timestamps = 1
+net.ipv4.tcp_fin_timeout = 20
+net.ipv4.tcp_fastopen = 3
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_max_syn_backlog = 8192
+
+# Главное исправление: TIME_WAIT
+net.ipv4.tcp_max_tw_buckets = 262144
+
+# Расширенные TCP возможности
+net.ipv4.tcp_fack = 1
+net.ipv4.tcp_ecn = 1
+net.ipv4.tcp_sack = 1
+
+# Keepalive — стабильность длинных соединений
+net.ipv4.tcp_keepalive_time = 600
+net.ipv4.tcp_keepalive_intvl = 60
+net.ipv4.tcp_keepalive_probes = 5
+
+# Размеры TCP буферов
+net.ipv4.tcp_rmem = 4096 87380 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
+
+# Очереди и буферы ядра
+net.core.somaxconn = 4096
+net.core.netdev_max_backlog = 5000
+net.core.rmem_max = 16777216
+net.core.wmem_max = 16777216
+
+# Современный алгоритм управления перегрузкой
 net.core.default_qdisc = $QDISC
 net.ipv4.tcp_congestion_control = $TCP_CONGESTION
 
-# --- TCP Tuning ---
-net.core.rmem_max = 33554432
-net.core.wmem_max = 33554432
-net.ipv4.tcp_rmem = 4096 87380 33554432
-net.ipv4.tcp_wmem = 4096 65536 33554432
+### Безопасность ядра
+kernel.yama.ptrace_scope = 1
+kernel.randomize_va_space = 2
 
-# Увеличение очереди подключений
-net.core.somaxconn = 65535
-net.ipv4.tcp_max_syn_backlog = 65535
-net.core.netdev_max_backlog = 16384
+# Защита от дампов suid-программ
+fs.suid_dumpable = 0
 
-# Тайм-ауты
-net.ipv4.tcp_fin_timeout = 25
-net.ipv4.tcp_keepalive_time = 300
-net.ipv4.tcp_keepalive_probes = 5
-net.ipv4.tcp_keepalive_intvl = 15
-
-# --- Security & Misc ---
-net.ipv4.conf.all.rp_filter = 1
-net.ipv4.tcp_syncookies = 1
-net.ipv4.tcp_fastopen = 3
+### Файловая система и память
+# Максимум открытых файлов
 fs.file-max = 2097152
+
+# Не использовать swap без необходимости
+vm.swappiness = 0
 EOF
 
     if [ $? -eq 0 ]; then
