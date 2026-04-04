@@ -12,8 +12,8 @@ setup_sysctl_hardening() {
 
     if modprobe tcp_bbr 2>/dev/null || grep -q "bbr" /proc/sys/net/ipv4/tcp_available_congestion_control 2>/dev/null; then
         local TCP_CONGESTION="bbr"
-        local QDISC="fq"
-        log_ok "Включаем BBR + FQ"
+        local QDISC="cake"
+        log_ok "Включаем BBR + cake"
     else
         local TCP_CONGESTION="cubic"
         local QDISC="fq_pie"
