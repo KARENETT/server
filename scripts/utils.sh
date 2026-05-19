@@ -3,23 +3,23 @@
 # Функции логирования
 log() {
     local message="[$(date +'%Y-%m-%d %H:%M:%S')] $1"
-    echo -e "${GREEN}${message}${NC}" | tee -a "$LOG_FILE"
+    echo -e "${GREEN}${message}${NC}"
 }
 
 error() {
     local message="[ERROR] $1"
-    echo -e "${RED}${message}${NC}" | tee -a "$LOG_FILE"
+    echo -e "${RED}${message}${NC}"
     return 1
 }
 
 warning() {
     local message="[WARNING] $1"
-    echo -e "${YELLOW}${message}${NC}" | tee -a "$LOG_FILE"
+    echo -e "${YELLOW}${message}${NC}"
 }
 
 info() {
     local message="[INFO] $1"
-    echo -e "${BLUE}${message}${NC}" | tee -a "$LOG_FILE"
+    echo -e "${BLUE}${message}${NC}"
 }
 
 # Функция проверки успешности выполнения команды
@@ -65,4 +65,16 @@ check_internet() {
     fi
     log "Интернет-соединение проверено"
     return 0
+}
+
+is_yes() {
+    local answer="${1:-}"
+    [[ "$answer" =~ ^([Yy]|[Дд][Аа]?|[Yy][Ee][Ss])$ ]]
+}
+
+confirm_yes_no() {
+    local prompt="$1"
+    local answer
+    read -rp "${PROMPT_PREFIX} ${prompt} " answer
+    is_yes "$answer"
 }

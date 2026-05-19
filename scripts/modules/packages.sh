@@ -3,7 +3,7 @@
 # Функция установки пакетов
 install_packages() {
     log "=========================================="
-    log "Установка базовых пакетов"
+    log "$(t packages_title)"
     log "=========================================="
 
     check_internet || return 1
@@ -17,23 +17,23 @@ install_packages() {
     )
 
     echo ""
-    info "Будут установлены следующие пакеты:"
+    info "$(t packages_list)"
     printf '%s\n' "${BASIC_PACKAGES[@]}" | pr -t -3
     echo ""
-    read -p "Продолжить установку? (Y/n): " -n 1 -r
+    read -rp "${PROMPT_PREFIX} $(t packages_confirm) " -n 1
     echo ""
     if [[ $REPLY =~ ^[Nn]$ ]]; then
-        warning "Установка пакетов отменена"
+        warning "$(t packages_cancelled)"
         return 0
     fi
 
-    log "Установка базовых утилит..."
+    log "$(t packages_installing)"
     for package in "${BASIC_PACKAGES[@]}"; do
         if ! dpkg -l | grep -q "^ii  $package "; then
-            info "Установка $package..."
-            retry_command "sudo DEBIAN_FRONTEND=noninteractive apt install -y $package" && check_success "$package установлен" || warning "$package не удалось установить"
+            info "$(t packages_installing_item) $package..."
+            retry_command "DEBIAN_FRONTEND=noninteractive apt install -y $package" && check_success "$package установлен" || warning "$package не удалось установить"
         else
-            info "$package уже установлен"
+            info "$package $(t packages_already_installed)"
         fi
     done
 
@@ -44,22 +44,22 @@ install_packages() {
     fi
 
     # Установка eza
-    log "Установка eza..."
+    log "$(t eza_installing)"
     if ! command -v eza &> /dev/null; then
         {
-            sudo mkdir -p /etc/apt/keyrings
-            wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
-            echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list > /dev/null
-            sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
-            sudo apt update
-            sudo apt install -y eza
+            mkdir -p /etc/apt/keyrings
+            wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
+            echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" > /etc/apt/sources.list.d/gierens.list
+            chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
+            apt update
+            apt install -y eza
             check_success "eza установлен"
         } || {
-            warning "Установка eza через apt не удалась, пропускаем..."
+            warning "$(t eza_install_failed)"
         }
     else
-        info "eza уже установлен"
+        info "$(t eza_already_installed)"
     fi
 
-    log "Установка пакетов завершена"
+    log "$(t packages_done)"
 }

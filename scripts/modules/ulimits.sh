@@ -4,10 +4,10 @@ setup_ulimits() {
     local limits_file="/etc/security/limits.d/99-server-opt.conf"
 
     log "=========================================="
-    log "Настройка ulimits"
+    log "$(t ulimits_title)"
     log "=========================================="
 
-    sudo tee "$limits_file" > /dev/null << 'EOF'
+    tee "$limits_file" > /dev/null << 'EOF'
 * soft nofile 1000000
 * hard nofile 1000000
 root soft nofile 1000000
@@ -17,6 +17,18 @@ EOF
 
     ulimit -n 1000000 2>/dev/null || true
 
-    warning "Новые лимиты полностью применятся после нового входа в систему"
-    log "Лимиты открытых файлов увеличены до 1000000"
+    warning "$(t ulimits_relogin)"
+    log "$(t ulimits_done)"
+}
+
+disable_ulimits() {
+    local limits_file="/etc/security/limits.d/99-server-opt.conf"
+
+    log "=========================================="
+    log "$(t ulimits_disable_title)"
+    log "=========================================="
+
+    rm -f "$limits_file"
+    warning "$(t ulimits_disable_relogin)"
+    check_success "Пользовательские ulimits отключены"
 }

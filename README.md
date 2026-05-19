@@ -1,167 +1,33 @@
-# 🚀 Server Setup Automation
+# KARENET Server Setup
 
-Автоматическая настройка и конфигурация Linux-сервера с установкой современного стека разработки, включая ZSH, Docker, Node.js, Bun и другие инструменты.
+Минималистичный интерактивный скрипт для первичной настройки Ubuntu-сервера.
 
----
-
-## Гайды
-
-- [Установка SSH ключей](https://github.com/haxgun/server/blob/main/guides/ssh.md)
-- [Подключение SSH к Github](https://github.com/haxgun/server/blob/main/guides/github.md)
-- [Добавление пользователя](https://github.com/haxgun/server/blob/main/guides/new_user.md)
-
----
-
-## ✨ Возможности
-
-- ✅ Автоматическое обновление системы
-- ✅ Автоматическая настройка SWAP на серверах с небольшим объёмом RAM
-- ✅ Повышение `nofile` ulimits до 1,000,000
-- ✅ Установка базовых утилит и инструментов разработки
-- ✅ Настройка ZSH с Oh-My-Zsh и плагинами
-- ✅ Установка Docker и Docker Compose
-- ✅ Установка Node.js, npm, Bun, uv
-- ✅ Установка XanMod Kernel
-- ✅ Настройка безопасного SSH (смена порта, отключение root)
-- ✅ Настройка UFW firewall
-- ✅ Установка Fail2Ban для защиты от брутфорса
-- ✅ Логирование всех действий
-- ✅ Проверка успешности установки компонентов
-
-## 🚀 Быстрый старт
-
-### 1. Загрузка скрипта
-
-**Клонируйте репозиторий**
+## Установка через терминал
 
 ```bash
-git clone https://github.com/haxgun/server.git
-cd server
+bash <(curl -fsSL https://raw.githubusercontent.com/KARENETT/server/main/setup.sh)
 ```
 
-**Или скачайте напрямую**
+Или сразу с `sudo`:
 
 ```bash
-wget https://raw.githubusercontent.com/haxgun/server/main/setup.sh
+curl -fsSL https://raw.githubusercontent.com/KARENETT/server/main/setup.sh | sudo bash
 ```
 
-### 2. Дайте права на выполнение
+## Что умеет
+
+- Быстрый старт и выборочная установка модулей
+- Безопасность: SSH, UFW, Fail2Ban, TrafficGuard
+- Производительность: XanMod, sysctl hardening (BBR), TFO, MSS clamp
+- Dev-окружение: ZSH, Docker, Node.js/Bun/PM2, uv
+- Дополнительно: WARP NATIVE by distillium
+
+## Запуск после установки
 
 ```bash
-chmod +x setup.sh
+sudo karenet-setup
 ```
 
+## Репозиторий
 
-**Объяснение**: команда `chmod +x` добавляет право на выполнение файла. Без этого система не позволит запустить скрипт
-
-### 3. Запустите скрипт
-
-```bash
-sh setup.sh
-```
-
-
-**Важно**: Скрипт НЕ должен запускаться от root - используйте обычного пользователя с sudo-правами.
-
----
-
-### Перед запуском
-
-1. **Создайте резервную копию** важных данных
-2. **Убедитесь в стабильном интернет-соединении**
-3. **Проверьте права sudo**: `sudo -v`
-
-### Параметры скрипта
-
-Скрипт автоматически:
-- Обновляет систему
-- Устанавливает все компоненты
-- Создаёт логи в `~/server_setup_YYYYMMDD_HHMMSS.log`
-- Меняет SSH порт на **33556**
-- Запрашивает перезагрузку по завершении
-
----
-
-## 📦 Что устанавливается
-
-### Системные утилиты
-- curl, wget, git, ufw, gpg, ca-certificates
-- build-essential, unzip
-- tree, htop, neofetch, vim, nano, micro
-- tmux, screen, rsync, jq
-
-### Современные инструменты CLI
-- **eza** - современная замена ls
-- **bat** - улучшенная версия cat с подсветкой синтаксиса
-- **fd** - быстрая альтернатива find
-- **ripgrep** - быстрый поиск по файлам
-- **fzf** - fuzzy finder
-
-### Оболочка и окружение
-- **ZSH** - современная оболочка
-- **Oh-My-Zsh** - фреймворк для ZSH
-- **Starship** - кроссплатформенный prompt
-- **Плагины**:
-- zsh-syntax-highlighting
-- zsh-autosuggestions
-
-### Инструменты разработки
-- **Docker** + Docker Compose
-- **Node.js** (LTS) + npm
-- **PM2** - process manager для Node.js
-- **Yarn** - пакетный менеджер
-- **Bun** - быстрая альтернатива Node.js
-- **uv** - быстрый Python package installer
-- **XanMod Kernel** - оптимизированное ядро Linux для производительности
-
-### Безопасность
-- **UFW** - Uncomplicated Firewall (порты: 33556/SSH, 80/HTTP, 443/HTTPS)
-- **Fail2Ban** - защита от брутфорса SSH
-
-### Производительность
-- **SWAP** - автоматически создаётся на серверах с RAM меньше 8GB
-- **ulimits** - лимит открытых файлов (`nofile`) повышается до `1000000`
-- **XanMod Kernel** - опциональное производительное ядро Linux
-
----
-
-## 🔒 Безопасность
-
-### Изменения SSH
-
-После запуска скрипта:
-- SSH порт изменён на **33556**
-- Вход root **отключён**
-- Парольная аутентификация **отключена** (только SSH ключи)
-
-### Firewall правила
-
-#### Просмотр правил
-
-```bash
-sudo ufw status
-```
-
-#### Добавление правил
-
-```bash
-sudo ufw allow 8080/tcp
-```
-#### Удаление правил
-
-```bash
-sudo ufw delete allow 8080/tcp
-```
-### Fail2Ban
-
-#### Статус
-
-```bash
-sudo fail2ban-client status
-```
-
-#### Разблокировка IP
-
-```bash
-sudo fail2ban-client set <jail> unbanip <ip>
-```
+https://github.com/KARENETT/server

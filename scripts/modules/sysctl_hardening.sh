@@ -9,6 +9,11 @@ setup_sysctl_hardening() {
     log_ok "=========================================="
 
     local SYSCTL_FILE="/etc/sysctl.d/99-server-opt.conf"
+    local BACKUP_FILE="/etc/sysctl.d/99-server-opt.conf.karenet.bak"
+
+    if [[ -f "$SYSCTL_FILE" && ! -f "$BACKUP_FILE" ]]; then
+        cp -f "$SYSCTL_FILE" "$BACKUP_FILE"
+    fi
 
     if modprobe tcp_bbr 2>/dev/null || grep -q "bbr" /proc/sys/net/ipv4/tcp_available_congestion_control 2>/dev/null; then
         local TCP_CONGESTION="bbr"
@@ -20,7 +25,7 @@ setup_sysctl_hardening() {
         log_warn "BBR недоступен, используем CUBIC"
     fi
 
-    cat <<EOF | sudo tee "$SYSCTL_FILE" >/dev/null
+    cat <<EOF > "$SYSCTL_FILE"
 ### Безопасность IPv6 — отключаем, если не используется
 net.ipv6.conf.all.disable_ipv6 = 1
 net.ipv6.conf.default.disable_ipv6 = 1
@@ -115,7 +120,7 @@ vm.swappiness = 0
 EOF
 
     if [ $? -eq 0 ]; then
-        sudo sysctl --system >/dev/null 2>&1
+        sysctl --system >/dev/null 2>&1
         if [ $? -eq 0 ]; then
             log_ok "Настройки sysctl применены. Пинг отключен."
         else
@@ -123,5 +128,23 @@ EOF
         fi
     else
         log_warn "Не удалось записать файл $SYSCTL_FILE"
+    fi
+}
+
+disable_sysctl_hardening() {
+    local SYSCTL_FILE="/etc/sysctl.d/99-server-opt.conf"
+    local BACKUP_FILE="/etc/sysctl.d/99-server-opt.conf.karenet.bak"
+
+    log_ok "Отключение sysctl hardening..."
+    if [[ -f "$BACKUP_FILE" ]]; then
+        mv -f "$BACKUP_FILE" "$SYSCTL_FILE"
+    else
+        rm -f "$SYSCTL_FILE"
+    fi
+
+    if sysctl --system >/dev/null 2>&1; then
+        log_ok "sysctl hardening отключен"
+    else
+        log_warn "Не удалось полностью применить откат sysctl"
     fi
 }

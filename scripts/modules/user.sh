@@ -7,10 +7,10 @@ add_user() {
     echo -e "${CYAN}========================================${NC}"
     echo ""
 
-    read -p "Введите имя пользователя: " username
+    read -rp "${PROMPT_PREFIX} $(t user_step_1) " username
 
     if [ -z "$username" ]; then
-        error "Имя пользователя не может быть пустым"
+        error "$(t user_error_empty_name)"
         return 1
     fi
 
@@ -19,19 +19,34 @@ add_user() {
         return 1
     fi
 
+    local password password_confirm
+
+    read -rsp "${PROMPT_PREFIX} $(t user_step_2) " password
+    echo ""
+    read -rsp "${PROMPT_PREFIX} $(t user_step_3) " password_confirm
+    echo ""
+
+    if [ -z "$password" ]; then
+        error "$(t user_error_empty_password)"
+        return 1
+    fi
+
+    if [ "$password" != "$password_confirm" ]; then
+        error "$(t user_error_password_mismatch)"
+        return 1
+    fi
+
     log "Создание пользователя $username..."
-    sudo useradd -m -s /bin/bash -G users "$username"
+    useradd -m -s /bin/bash -G users "$username"
     check_success "Пользователь $username создан"
 
     log "Установка пароля для пользователя $username..."
-    sudo passwd "$username"
+    printf "%s:%s\n" "$username" "$password" | chpasswd
     check_success "Пароль установлен"
 
     echo ""
-    read -p "Выдать пользователю права sudo? (y/N): " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        sudo usermod -a -G sudo "$username"
+    if confirm_yes_no "$(t user_step_4)"; then
+        usermod -a -G sudo "$username"
         check_success "Права sudo выданы пользователю $username"
     else
         info "Права sudo не выданы"
