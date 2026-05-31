@@ -17,12 +17,12 @@ setup_sysctl_hardening() {
 
     if modprobe tcp_bbr 2>/dev/null || grep -q "bbr" /proc/sys/net/ipv4/tcp_available_congestion_control 2>/dev/null; then
         local TCP_CONGESTION="bbr"
-        local QDISC="cake"
-        log_ok "Включаем BBR + cake"
+        local QDISC="fq"
+        log_ok "Включаем BBR + fq"
     else
         local TCP_CONGESTION="cubic"
-        local QDISC="fq_pie"
-        log_warn "BBR недоступен, используем CUBIC"
+        local QDISC="fq_codel"
+        log_warn "BBR недоступен, используем CUBIC + fq_codel"
     fi
 
     cat <<EOF > "$SYSCTL_FILE"
@@ -72,10 +72,10 @@ net.ipv4.tcp_syncookies = 1
 
 # Улучшенные параметры TCP
 net.ipv4.tcp_timestamps = 1
-net.ipv4.tcp_fin_timeout = 20
+net.ipv4.tcp_fin_timeout = 15
 net.ipv4.tcp_fastopen = 3
 net.ipv4.tcp_tw_reuse = 1
-net.ipv4.tcp_max_syn_backlog = 8192
+net.ipv4.tcp_max_syn_backlog = 16384
 
 # Главное исправление: TIME_WAIT
 net.ipv4.tcp_max_tw_buckets = 262144
@@ -86,19 +86,23 @@ net.ipv4.tcp_ecn = 1
 net.ipv4.tcp_sack = 1
 
 # Keepalive — стабильность длинных соединений
-net.ipv4.tcp_keepalive_time = 600
-net.ipv4.tcp_keepalive_intvl = 60
+net.ipv4.tcp_keepalive_time = 300
+net.ipv4.tcp_keepalive_intvl = 30
 net.ipv4.tcp_keepalive_probes = 5
 
 # Размеры TCP буферов
-net.ipv4.tcp_rmem = 4096 87380 16777216
-net.ipv4.tcp_wmem = 4096 65536 16777216
+net.ipv4.tcp_rmem = 4096 131072 33554432
+net.ipv4.tcp_wmem = 4096 131072 33554432
 
 # Очереди и буферы ядра
-net.core.somaxconn = 4096
-net.core.netdev_max_backlog = 5000
-net.core.rmem_max = 16777216
-net.core.wmem_max = 16777216
+net.core.somaxconn = 16384
+net.core.netdev_max_backlog = 16384
+net.core.rmem_max = 33554432
+net.core.wmem_max = 33554432
+
+# UDP буферы важны для VPN-трафика
+net.ipv4.udp_rmem_min = 16384
+net.ipv4.udp_wmem_min = 16384
 
 # Современный алгоритм управления перегрузкой
 net.core.default_qdisc = $QDISC
@@ -122,7 +126,7 @@ EOF
     if [ $? -eq 0 ]; then
         sysctl --system >/dev/null 2>&1
         if [ $? -eq 0 ]; then
-            log_ok "Настройки sysctl применены. Пинг отключен."
+            log_ok "Настройки sysctl применены."
         else
             log_warn "sysctl --system завершился с ошибкой"
         fi
