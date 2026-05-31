@@ -22,42 +22,25 @@ setup_zsh() {
         return 1
     fi
 
-    # Установка Oh-My-Zsh
-    log "$(t omz_installing)"
-    if [ ! -d "$HOME/.oh-my-zsh" ]; then
-        retry_command 'RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"' && check_success "Oh-My-Zsh установлен"
-    else
-        info "$(t omz_already)"
-    fi
+    setup_zsh_user() {
+        local username="$1"
+        local user_home="$2"
 
-    # Установка плагинов ZSH
-    log "$(t zsh_plugins_installing)"
+        log "Настройка ZSH для пользователя: $username"
 
-    # zsh-syntax-highlighting
-    if [ ! -d "$HOME/.zsh-syntax-highlighting" ]; then
-        retry_command "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $HOME/.zsh-syntax-highlighting --depth 1" && check_success "zsh-syntax-highlighting установлен"
-    else
-        info "$(t zsh_syntax_already)"
-    fi
+        if [ ! -d "$user_home/.oh-my-zsh" ]; then
+            runuser -u "$username" -- sh -c 'RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"' || true
+        fi
 
-    # zsh-autosuggestions
-    if [ ! -d "$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions" ]; then
-        retry_command "git clone https://github.com/zsh-users/zsh-autosuggestions $HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions" && check_success "zsh-autosuggestions установлен"
-    else
-        info "$(t zsh_auto_already)"
-    fi
+        if [ ! -d "$user_home/.zsh-syntax-highlighting" ]; then
+            runuser -u "$username" -- git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$user_home/.zsh-syntax-highlighting" --depth 1 || true
+        fi
 
-    # Установка Starship
-    log "$(t starship_installing)"
-    if ! command -v starship &> /dev/null; then
-        retry_command "curl -sS https://starship.rs/install.sh | sh -s -- -y" && check_success "Starship установлен"
-    else
-        info "$(t starship_already)"
-    fi
+        if [ ! -d "$user_home/.oh-my-zsh/custom/plugins/zsh-autosuggestions" ]; then
+            runuser -u "$username" -- git clone https://github.com/zsh-users/zsh-autosuggestions "$user_home/.oh-my-zsh/custom/plugins/zsh-autosuggestions" --depth 1 || true
+        fi
 
-    # Создание .zshrc
-    log "$(t zshrc_creating)"
-    cat > ~/.zshrc << 'ZSHRC_EOF'
+        cat > "$user_home/.zshrc" << 'ZSHRC_EOF'
 # Oh My Zsh configuration
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME=""
@@ -97,15 +80,27 @@ HISTFILE=~/.zsh_history
 setopt SHARE_HISTORY HIST_IGNORE_ALL_DUPS HIST_FIND_NO_DUPS
 ZSHRC_EOF
 
-    check_success ".zshrc создан"
+        chown "$username:$username" "$user_home/.zshrc" || true
+        usermod -s "$(which zsh)" "$username" || true
+    }
 
-    # Изменение shell на zsh
-    log "$(t shell_switching)"
-    if [ "$SHELL" != "$(which zsh)" ]; then
-        chsh -s "$(which zsh)" "${SUDO_USER:-$USER}" && check_success "Оболочка изменена на zsh"
+    # Установка Starship
+    log "$(t starship_installing)"
+    if ! command -v starship &> /dev/null; then
+        retry_command "curl -sS https://starship.rs/install.sh | sh -s -- -y" && check_success "Starship установлен"
     else
-        info "$(t shell_already_zsh)"
+        info "$(t starship_already)"
     fi
+
+    log "$(t zsh_plugins_installing)"
+    while IFS=: read -r username _ uid _ _ home shell; do
+        if { [ "$uid" -ge 1000 ] || [ "$username" = "root" ]; } && [ -d "$home" ] && [[ "$shell" != *nologin ]] && [[ "$shell" != *false ]]; then
+            setup_zsh_user "$username" "$home"
+        fi
+    done < /etc/passwd
+
+    usermod -D -s "$(which zsh)" || true
+    check_success "ZSH настроен для всех пользователей; shell по умолчанию обновлен"
 
     log "$(t zsh_done)"
 }
