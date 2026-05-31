@@ -4,14 +4,16 @@ set -euo pipefail
 IFS=$'\n\t'
 
 # Получение директории скриптов
-SCRIPT_SOURCE="${BASH_SOURCE[0]:-$0}"
+SCRIPT_SOURCE="$0"
+if [[ -n "${BASH_SOURCE+x}" && -n "${BASH_SOURCE[0]-}" ]]; then
+    SCRIPT_SOURCE="${BASH_SOURCE[0]}"
+fi
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" 2>/dev/null && pwd || pwd)"
 SCRIPT_VERSION="1.0.0"
 LANGUAGE="${LANGUAGE:-}"
 INSTALL_DIR="/opt/karenet-setup"
 SHORTCUT_PATH="/usr/local/bin/karenet-setup"
-REPO_GIT_URL="https://github.com/KARENETT/server.git"
-REPO_TARBALL_URL="https://codeload.github.com/KARENETT/server/tar.gz/refs/heads/main"
+REPO_RAW_BASE="https://raw.githubusercontent.com/KARENETT/server/main"
 
 # Доступ только для суперпользователя
 if [[ $EUID -ne 0 ]]; then
@@ -20,36 +22,50 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 ensure_global_install() {
-    local source_dir target_dir tmp_dir extracted_dir
+    local source_dir target_dir tmp_dir f
+
+    download_runtime_files() {
+        mkdir -p "$tmp_dir/scripts/modules" "$tmp_dir/translation"
+
+        local files=(
+            "setup.sh"
+            "scripts/config.sh"
+            "scripts/utils.sh"
+            "scripts/modules/user.sh"
+            "scripts/modules/system.sh"
+            "scripts/modules/swap.sh"
+            "scripts/modules/ulimits.sh"
+            "scripts/modules/packages.sh"
+            "scripts/modules/ssh.sh"
+            "scripts/modules/firewall.sh"
+            "scripts/modules/zsh.sh"
+            "scripts/modules/nodejs.sh"
+            "scripts/modules/uv.sh"
+            "scripts/modules/docker.sh"
+            "scripts/modules/xanmod.sh"
+            "scripts/modules/sysctl_hardening.sh"
+            "scripts/modules/network_tweaks.sh"
+            "scripts/modules/trafficguard.sh"
+            "scripts/modules/warp_native.sh"
+            "translation/ru.sh"
+            "translation/en.sh"
+        )
+
+        for f in "${files[@]}"; do
+            mkdir -p "$tmp_dir/$(dirname "$f")"
+            curl -fsSL "$REPO_RAW_BASE/$f" -o "$tmp_dir/$f" || {
+                echo "[ERROR] Не удалось скачать: $f"
+                exit 1
+            }
+        done
+    }
 
     if [[ ! -f "$SCRIPT_DIR/scripts/config.sh" ]]; then
-        mkdir -p "$INSTALL_DIR"
         tmp_dir="$(mktemp -d /tmp/karenet-setup.XXXXXX)"
+        mkdir -p "$INSTALL_DIR"
 
-        if command -v git >/dev/null 2>&1; then
-            git clone --depth 1 "$REPO_GIT_URL" "$tmp_dir/repo" >/dev/null 2>&1 || {
-                echo "[ERROR] Не удалось скачать репозиторий: $REPO_GIT_URL"
-                exit 1
-            }
-            cp -a "$tmp_dir/repo/." "$INSTALL_DIR/"
-        else
-            curl -fsSL "$REPO_TARBALL_URL" | tar -xz -C "$tmp_dir" || {
-                echo "[ERROR] Не удалось скачать архив репозитория"
-                exit 1
-            }
-            extracted_dir=""
-            for d in "$tmp_dir"/server-*; do
-                if [[ -d "$d" ]]; then
-                    extracted_dir="$d"
-                    break
-                fi
-            done
-            if [[ -z "$extracted_dir" ]]; then
-                echo "[ERROR] Не найден распакованный каталог репозитория"
-                exit 1
-            fi
-            cp -a "$extracted_dir/." "$INSTALL_DIR/"
-        fi
+        download_runtime_files
+        cp -a "$tmp_dir/." "$INSTALL_DIR/"
 
         rm -rf "$tmp_dir"
         chmod +x "$INSTALL_DIR/setup.sh"
