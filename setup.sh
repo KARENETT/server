@@ -4,11 +4,14 @@ set -euo pipefail
 IFS=$'\n\t'
 
 # Получение директории скриптов
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_SOURCE="${BASH_SOURCE[0]:-$0}"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" 2>/dev/null && pwd || pwd)"
 SCRIPT_VERSION="1.0.0"
 LANGUAGE="${LANGUAGE:-}"
 INSTALL_DIR="/opt/karenet-setup"
 SHORTCUT_PATH="/usr/local/bin/karenet-setup"
+REPO_GIT_URL="https://github.com/KARENETT/server.git"
+REPO_TARBALL_URL="https://codeload.github.com/KARENETT/server/tar.gz/refs/heads/main"
 
 # Доступ только для суперпользователя
 if [[ $EUID -ne 0 ]]; then
@@ -17,12 +20,48 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 ensure_global_install() {
-    local source_dir target_dir
+    local source_dir target_dir tmp_dir extracted_dir
+
+    if [[ ! -f "$SCRIPT_DIR/scripts/config.sh" ]]; then
+        mkdir -p "$INSTALL_DIR"
+        tmp_dir="$(mktemp -d /tmp/karenet-setup.XXXXXX)"
+
+        if command -v git >/dev/null 2>&1; then
+            git clone --depth 1 "$REPO_GIT_URL" "$tmp_dir/repo" >/dev/null 2>&1 || {
+                echo "[ERROR] Не удалось скачать репозиторий: $REPO_GIT_URL"
+                exit 1
+            }
+            cp -a "$tmp_dir/repo/." "$INSTALL_DIR/"
+        else
+            curl -fsSL "$REPO_TARBALL_URL" | tar -xz -C "$tmp_dir" || {
+                echo "[ERROR] Не удалось скачать архив репозитория"
+                exit 1
+            }
+            extracted_dir=""
+            for d in "$tmp_dir"/server-*; do
+                if [[ -d "$d" ]]; then
+                    extracted_dir="$d"
+                    break
+                fi
+            done
+            if [[ -z "$extracted_dir" ]]; then
+                echo "[ERROR] Не найден распакованный каталог репозитория"
+                exit 1
+            fi
+            cp -a "$extracted_dir/." "$INSTALL_DIR/"
+        fi
+
+        rm -rf "$tmp_dir"
+        chmod +x "$INSTALL_DIR/setup.sh"
+        ln -sfn "$INSTALL_DIR/setup.sh" "$SHORTCUT_PATH"
+        exec "$INSTALL_DIR/setup.sh" "$@"
+    fi
+
     mkdir -p "$INSTALL_DIR"
     source_dir="$(realpath "$SCRIPT_DIR")"
     target_dir="$(realpath "$INSTALL_DIR")"
 
-    if [[ "$source_dir" != "$target_dir" ]]; then
+    if [[ "$source_dir" != "$target_dir" && -d "$SCRIPT_DIR/scripts" ]]; then
         cp -a "$SCRIPT_DIR/." "$INSTALL_DIR/"
     fi
 
