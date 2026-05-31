@@ -1,8 +1,62 @@
-# KARENET Server Setup
+<div align="center">
 
-Минималистичный интерактивный скрипт для первичной настройки Ubuntu-сервера.
+<img src="logo.png" alt="KARENET" width="240"  />
 
-## Установка через терминал
+Интерактивный набор скриптов для быстрой, безопасной и повторяемой настройки Ubuntu/Debian сервера.
+
+[![Shell](https://img.shields.io/badge/Shell-Bash-121011?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
+[![Ubuntu/Debian](https://img.shields.io/badge/OS-Ubuntu%20%7C%20Debian-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com)
+[![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+
+</div>
+
+---
+
+## 🚀 Что делает проект
+
+`KARENET Server` автоматизирует первичную подготовку VPS/выделенного сервера:
+
+- Hardening SSH и сетевой безопасности;
+- базовый firewall и защитные сервисы;
+- сетевые оптимизации (BBR/sysctl/TFO);
+- установка dev-инструментов и runtime-компонентов;
+- единый интерактивный запуск через `setup.sh`.
+
+---
+
+## ✨ Возможности
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🔐 Security
+
+- Настройка SSH (порт, ограничения, базовый hardening)
+- UFW/Firewall профили и базовые правила доступа
+- Fail2Ban и дополнительные защитные модули
+- TrafficGuard и сетевые ограничения для снижения шума
+
+</td>
+<td width="50%" valign="top">
+
+### 🛠 Infrastructure
+
+- Настройка sysctl hardening и congestion control (BBR)
+- Оптимизация сети (MSS clamp, TCP tweaks)
+- Установка Docker и вспомогательных пакетов
+- Модули Node.js, uv, ZSH и системные утилиты
+
+</td>
+</tr>
+</table>
+
+---
+
+## ⚡ Быстрый старт
+
+Запуск напрямую из GitHub:
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/KARENETT/server/main/setup.sh)
@@ -14,20 +68,47 @@ bash <(curl -fsSL https://raw.githubusercontent.com/KARENETT/server/main/setup.s
 curl -fsSL https://raw.githubusercontent.com/KARENETT/server/main/setup.sh | sudo bash
 ```
 
-## Что умеет
-
-- Быстрый старт и выборочная установка модулей
-- Безопасность: SSH, UFW, Fail2Ban, TrafficGuard
-- Производительность: XanMod, sysctl hardening (BBR), TFO, MSS clamp
-- Dev-окружение: ZSH, Docker, Node.js/Bun/PM2, uv
-- Дополнительно: WARP NATIVE by distillium
-
-## Запуск после установки
+Локальный запуск после установки:
 
 ```bash
 sudo karenet-setup
 ```
 
-## Репозиторий
+---
 
-https://github.com/KARENETT/server
+## ⚙️ Модули установки
+
+| Категория | Что настраивается |
+|:--|:--|
+| System | Базовые системные пакеты, user/system tweaks |
+| Network | sysctl hardening, BBR, network tuning |
+| Security | SSH, firewall, fail2ban, trafficguard |
+| Runtime | Docker, Node.js, uv, ZSH, XanMod, WARP Native |
+
+---
+
+## 📁 Структура репозитория
+
+- `setup.sh` - основной интерактивный установщик
+- `scripts/modules/` - независимые модули настройки
+- `scripts/utils.sh` - общие функции и helper-утилиты
+- `translation/en.sh`, `translation/ru.sh` - локализация интерфейса
+
+---
+
+## 🔗 Полезные команды
+
+```bash
+# Клонировать проект
+git clone git@github.com:KARENETT/server.git
+
+# Запустить локально
+cd server
+sudo bash setup.sh
+```
+
+---
+
+## 📄 Лицензия
+
+MIT, см. файл `LICENSE`.
