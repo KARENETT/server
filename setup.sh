@@ -21,6 +21,12 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+# При запуске через `curl ... | sudo bash` stdin занят скриптом и к моменту
+# интерактивного меню оказывается на EOF. Переключаем ввод на терминал.
+if [[ ! -t 0 && -r /dev/tty ]]; then
+    exec < /dev/tty
+fi
+
 ensure_global_install() {
     local source_dir target_dir tmp_dir f
 
