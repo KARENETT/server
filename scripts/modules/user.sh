@@ -40,6 +40,11 @@ add_user() {
     useradd -m -s /bin/bash -G users "$username"
     check_success "Пользователь $username создан"
 
+    if getent group docker >/dev/null; then
+        usermod -aG docker "$username"
+        check_success "Пользователь $username добавлен в группу docker"
+    fi
+
     log "Установка пароля для пользователя $username..."
     printf "%s:%s\n" "$username" "$password" | chpasswd
     check_success "Пароль установлен"

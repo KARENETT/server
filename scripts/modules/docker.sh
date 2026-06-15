@@ -1,5 +1,24 @@
 #!/bin/bash
 
+add_users_to_docker_group() {
+    local username _ passwd uid gid gecos home shell
+
+    if ! getent group docker >/dev/null; then
+        return 0
+    fi
+
+    while IFS=: read -r username passwd uid gid gecos home shell; do
+        [[ "$uid" -ge 1000 ]] || continue
+        [[ "$shell" == *nologin || "$shell" == *false ]] && continue
+
+        if id -nG "$username" | tr ' ' '\n' | grep -qx docker; then
+            continue
+        fi
+
+        usermod -aG docker "$username" && check_success "Пользователь $username добавлен в группу docker"
+    done < <(getent passwd)
+}
+
 # Функция установки Docker
 setup_docker() {
     log "=========================================="
@@ -29,6 +48,8 @@ setup_docker() {
     else
         info "Docker уже установлен ($(docker --version))"
     fi
+
+    add_users_to_docker_group
 
     log "$(t docker_done)"
 }
