@@ -138,7 +138,7 @@ translate_ru() {
         node_done) echo "Node.js, Bun и PM2 установлены" ;;
         docker_title) echo "Установка Docker" ;;
         docker_installing) echo "Установка Docker..." ;;
-        docker_newgrp) echo "Для применения прав docker выполните: newgrp docker" ;;
+        docker_newgrp) echo "Доступ к Docker и Docker Compose открыт для всех пользователей" ;;
         docker_done) echo "Docker успешно установлен" ;;
         xanmod_title) echo "Установка XanMod Kernel" ;;
         xanmod_amd64_only) echo "XanMod поддерживается этим скриптом только на amd64" ;;
