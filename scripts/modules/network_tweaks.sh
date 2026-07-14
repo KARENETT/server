@@ -3,7 +3,7 @@
 setup_tcp_fastopen() {
     local sysctl_file="/etc/sysctl.d/98-karenet-tfo.conf"
 
-    log "Включение TCP Fast Open..."
+    log "Включение TCP Fast Open для TCP-протоколов..."
     cat > "$sysctl_file" <<'EOF'
 net.ipv4.tcp_fastopen = 3
 EOF
@@ -30,17 +30,16 @@ setup_mss_clamp() {
     local script_path="/usr/local/sbin/karenet-mss-clamp.sh"
     local service_path="/etc/systemd/system/karenet-mss-clamp.service"
 
-    log "Настройка MSS clamp..."
+    log "Настройка MSS clamp для локальных и транзитных TCP-сессий..."
 
     cat > "$script_path" <<'EOF'
 #!/bin/bash
 set -euo pipefail
 
-iptables -t mangle -C FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || \
-iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
-
-ip6tables -t mangle -C FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || \
-ip6tables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+for chain in OUTPUT FORWARD; do
+    iptables -t mangle -C "$chain" -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || \
+    iptables -t mangle -A "$chain" -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+done
 EOF
 
     chmod +x "$script_path"
@@ -75,8 +74,8 @@ disable_mss_clamp() {
     systemctl disable --now "$service_name" >/dev/null 2>&1 || true
     rm -f "$service_path" "$script_path"
 
+    iptables -t mangle -D OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu >/dev/null 2>&1 || true
     iptables -t mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu >/dev/null 2>&1 || true
-    ip6tables -t mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu >/dev/null 2>&1 || true
 
     systemctl daemon-reload
     check_success "MSS clamp отключен"

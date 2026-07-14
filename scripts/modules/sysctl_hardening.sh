@@ -5,7 +5,7 @@ log_warn()  { echo -e "${YELLOW}[⚠️ WARN]${NC} $1"; }
 
 setup_sysctl_hardening() {
     log_ok "=========================================="
-    log_ok "Sysctl hardening + оптимизация под Hysteria 2 / VLESS"
+    log_ok "Sysctl hardening + оптимизация под VLESS / TROJAN / HYSTERIA2"
     log_ok "=========================================="
 
     local SYSCTL_FILE="/etc/sysctl.d/99-server-opt.conf"
@@ -36,12 +36,12 @@ net.ipv6.conf.all.accept_ra = 0
 net.ipv6.conf.default.accept_ra = 0
 net.ipv6.conf.all.autoconf = 0
 net.ipv6.conf.default.autoconf = 0
-net.ipv6.conf.all.use_tempaddr = 2
-net.ipv6.conf.default.use_tempaddr = 2
 net.ipv6.conf.all.accept_redirects = 0
 net.ipv6.conf.default.accept_redirects = 0
 net.ipv6.conf.all.accept_source_route = 0
 net.ipv6.conf.default.accept_source_route = 0
+net.ipv6.conf.all.use_tempaddr = 2
+net.ipv6.conf.default.use_tempaddr = 2
 
 ### IPv4 — маршрутизация и защита
 net.ipv4.ip_forward = 0
@@ -62,6 +62,7 @@ net.ipv4.conf.default.log_martians = 1
 
 ### ICMP — безопасность и ограничение флуда
 net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_echo_ignore_all = 1
 net.ipv4.icmp_ratelimit = 100
 net.ipv4.icmp_ratemask = 88089
 net.ipv4.icmp_ignore_bogus_error_responses = 1
@@ -89,6 +90,7 @@ net.ipv4.tcp_sack = 1
 net.ipv4.tcp_keepalive_time = 300
 net.ipv4.tcp_keepalive_intvl = 30
 net.ipv4.tcp_keepalive_probes = 5
+net.ipv4.tcp_mtu_probing = 1
 
 # Размеры TCP буферов
 net.ipv4.tcp_rmem = 4096 131072 33554432
@@ -101,8 +103,8 @@ net.core.rmem_max = 33554432
 net.core.wmem_max = 33554432
 
 # UDP буферы важны для VPN-трафика
-net.ipv4.udp_rmem_min = 16384
-net.ipv4.udp_wmem_min = 16384
+net.ipv4.udp_rmem_min = 65536
+net.ipv4.udp_wmem_min = 65536
 
 # Современный алгоритм управления перегрузкой
 net.core.default_qdisc = $QDISC
