@@ -18,7 +18,7 @@ setup_firewall() {
     ufw default allow outgoing
 
     # Разрешаем нужные порты
-    ufw allow "${ssh_port}/tcp" comment 'SSH'
+    ufw limit "${ssh_port}/tcp" comment 'SSH'
     ufw allow 80/tcp comment 'HTTP (ACME/fallback)'
     ufw allow 443/tcp comment 'HTTPS / VLESS fallback'
 
@@ -36,10 +36,10 @@ banaction = ufw
 banaction_allports = ufw
 backend = systemd
 usedns = warn
-allowipv6 = auto
+allowipv6 = no
 
 # Progressive ban policy
-bantime = 1h
+bantime = 2h
 bantime.increment = true
 bantime.factor = 2
 bantime.formula = bantime * (1<<(ban.Count if ban.Count<10 else 10))
@@ -47,24 +47,24 @@ bantime.maxtime = 1w
 bantime.rndtime = 10m
 
 # Detection window
-findtime = 10m
-maxretry = 5
+findtime = 5m
+maxretry = 3
 
 # Whitelist trusted ranges here if needed
-ignoreip = 127.0.0.1/8 ::1
+ignoreip = 127.0.0.1/8
 
 [sshd]
 enabled = true
 port = ${ssh_port}
 mode = aggressive
-maxretry = 4
+maxretry = 3
 filter = sshd
 backend = systemd
 journalmatch = _SYSTEMD_UNIT=ssh.service + _COMM=sshd
 action = %(action_mwl)s
 logpath = /var/log/auth.log
-findtime = 10m
-bantime = 12h
+findtime = 5m
+bantime = 1d
 
 [sshd-ddos]
 enabled = true
@@ -74,8 +74,8 @@ backend = systemd
 journalmatch = _SYSTEMD_UNIT=ssh.service + _COMM=sshd
 action = %(action_)s
 findtime = 5m
-maxretry = 6
-bantime = 24h
+maxretry = 4
+bantime = 72h
 
 [nginx-http-auth]
 enabled = false
@@ -86,8 +86,8 @@ logpath = /var/log/fail2ban.log
 backend = auto
 banaction = ufw
 findtime = 1d
-bantime = 1w
-maxretry = 5
+bantime = 2w
+maxretry = 3
 EOF
 
     tee /etc/fail2ban/fail2ban.local > /dev/null << 'EOF'
@@ -107,6 +107,11 @@ EOF
 
     fail2ban-client status sshd >/dev/null 2>&1 || {
         error "Jail sshd не активирован"
+        return 1
+    }
+
+    fail2ban-client status sshd-ddos >/dev/null 2>&1 || {
+        error "Jail sshd-ddos не активирован"
         return 1
     }
 
