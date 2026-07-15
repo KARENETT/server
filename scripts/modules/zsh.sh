@@ -22,23 +22,26 @@ setup_zsh() {
         return 1
     fi
 
-    setup_zsh_user() {
-        local username="$1"
-        local user_home="$2"
+setup_zsh_user() {
+    local username="$1"
+    local user_home="$2"
+    local zsh_path
 
-        log "Настройка ZSH для пользователя: $username"
+    zsh_path="$(command -v zsh)"
 
-        if [ ! -d "$user_home/.oh-my-zsh" ]; then
-            runuser -u "$username" -- sh -c 'RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"' || true
-        fi
+    log "Настройка ZSH для пользователя: $username"
 
-        if [ ! -d "$user_home/.zsh-syntax-highlighting" ]; then
-            runuser -u "$username" -- git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$user_home/.zsh-syntax-highlighting" --depth 1 || true
-        fi
+    if [ ! -d "$user_home/.oh-my-zsh" ]; then
+            runuser -u "$username" -- git clone --depth 1 https://github.com/ohmyzsh/ohmyzsh.git "$user_home/.oh-my-zsh" || true
+    fi
 
-        if [ ! -d "$user_home/.oh-my-zsh/custom/plugins/zsh-autosuggestions" ]; then
-            runuser -u "$username" -- git clone https://github.com/zsh-users/zsh-autosuggestions "$user_home/.oh-my-zsh/custom/plugins/zsh-autosuggestions" --depth 1 || true
-        fi
+    if [ ! -d "$user_home/.zsh-syntax-highlighting" ]; then
+            runuser -u "$username" -- git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting.git "$user_home/.zsh-syntax-highlighting" || true
+    fi
+
+    if [ ! -d "$user_home/.oh-my-zsh/custom/plugins/zsh-autosuggestions" ]; then
+            runuser -u "$username" -- git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions.git "$user_home/.oh-my-zsh/custom/plugins/zsh-autosuggestions" || true
+    fi
 
         cat > "$user_home/.zshrc" << 'ZSHRC_EOF'
 # Oh My Zsh configuration
@@ -52,12 +55,12 @@ plugins=(
 
 # Загрузка Oh My Zsh
 if [ -f "$ZSH/oh-my-zsh.sh" ]; then
-    source $ZSH/oh-my-zsh.sh
+    source "$ZSH/oh-my-zsh.sh"
 fi
 
 # Syntax highlighting
 if [ -f "$HOME/.zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
-    source $HOME/.zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+    source "$HOME/.zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 fi
 
 # Starship prompt
@@ -76,13 +79,13 @@ export PATH="$HOME/.local/bin:$PATH"
 # History
 HISTSIZE=10000
 SAVEHIST=10000
-HISTFILE=~/.zsh_history
+HISTFILE="$HOME/.zsh_history"
 setopt SHARE_HISTORY HIST_IGNORE_ALL_DUPS HIST_FIND_NO_DUPS
 ZSHRC_EOF
 
         chown "$username:$username" "$user_home/.zshrc" || true
-        usermod -s "$(which zsh)" "$username" || true
-    }
+    usermod -s "$zsh_path" "$username" || true
+}
 
     # Установка Starship
     log "$(t starship_installing)"
@@ -99,7 +102,7 @@ ZSHRC_EOF
         fi
     done < /etc/passwd
 
-    usermod -D -s "$(which zsh)" || true
+    usermod -D -s "$(command -v zsh)" || true
     check_success "ZSH настроен для всех пользователей; shell по умолчанию обновлен"
 
     log "$(t zsh_done)"
