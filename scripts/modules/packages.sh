@@ -12,7 +12,7 @@ install_packages() {
         curl wget git ufw micro gpg ca-certificates
         lsb-release apt-transport-https software-properties-common
         build-essential unzip gnupg gnupg-agent tree htop btop
-        neofetch vim nano jq rsync tmux screen bat
+        fastfetch vim nano jq rsync tmux screen bat
         fd-find ripgrep fzf python3-pip
     )
 
