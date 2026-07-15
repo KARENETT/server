@@ -69,7 +69,7 @@ bantime = 1d
 [sshd-ddos]
 enabled = true
 port = ${ssh_port}
-filter = sshd-ddos
+filter = sshd[mode=ddos]
 backend = systemd
 journalmatch = _SYSTEMD_UNIT=ssh.service + _COMM=sshd
 action = %(action_)s
