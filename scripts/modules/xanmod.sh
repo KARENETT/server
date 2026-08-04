@@ -24,6 +24,9 @@ detect_xanmod_package() {
 setup_xanmod() {
     local xanmod_package
     local distro_codename
+    local key_url="https://dl.xanmod.org/archive.key"
+    local key_tmp
+    local keyring_path="/etc/apt/keyrings/xanmod-archive-keyring.gpg"
 
     log "=========================================="
     log "$(t xanmod_title)"
@@ -71,8 +74,17 @@ setup_xanmod() {
     fi
 
     mkdir -p /etc/apt/keyrings
-    retry_command "wget -qO - https://dl.xanmod.org/archive.key | gpg --dearmor -o /etc/apt/keyrings/xanmod-archive-keyring.gpg" && check_success "Ключ XanMod добавлен" || return 1
-    echo "deb [signed-by=/etc/apt/keyrings/xanmod-archive-keyring.gpg] http://deb.xanmod.org $distro_codename main" > /etc/apt/sources.list.d/xanmod-release.list
+    key_tmp="$(mktemp /tmp/xanmod-key.XXXXXX)"
+    if curl -fsSL "$key_url" -o "$key_tmp" && [[ -s "$key_tmp" ]] && gpg --batch --yes --dearmor -o "$keyring_path" "$key_tmp"; then
+        chmod 0644 "$keyring_path"
+        check_success "Ключ XanMod добавлен"
+    else
+        rm -f "$key_tmp" "$keyring_path"
+        error "Не удалось загрузить или обработать ключ XanMod"
+        return 1
+    fi
+    rm -f "$key_tmp"
+    echo "deb [signed-by=$keyring_path] http://deb.xanmod.org $distro_codename main" > /etc/apt/sources.list.d/xanmod-release.list
     check_success "Репозиторий XanMod добавлен" || return 1
 
     retry_command "apt update" && check_success "Список пакетов обновлён" || return 1
