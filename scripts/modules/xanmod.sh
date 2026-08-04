@@ -75,7 +75,13 @@ setup_xanmod() {
 
     mkdir -p /etc/apt/keyrings
     key_tmp="$(mktemp /tmp/xanmod-key.XXXXXX)"
-    if curl -fsSL "$key_url" -o "$key_tmp" && [[ -s "$key_tmp" ]] && gpg --batch --yes --dearmor -o "$keyring_path" "$key_tmp"; then
+    if command -v wget >/dev/null 2>&1; then
+        wget -qO "$key_tmp" "$key_url"
+    else
+        curl -fsSLA "Mozilla/5.0" "$key_url" -o "$key_tmp"
+    fi
+
+    if [[ -s "$key_tmp" ]] && gpg --batch --yes --dearmor -o "$keyring_path" "$key_tmp"; then
         chmod 0644 "$keyring_path"
         check_success "Ключ XanMod добавлен"
     else
