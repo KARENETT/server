@@ -28,6 +28,11 @@ setup_xanmod() {
     local key_tmp
     local keyring_path="/etc/apt/keyrings/xanmod-archive-keyring.gpg"
 
+    xanmod_skip() {
+        warning "$1"
+        return 0
+    }
+
     log "=========================================="
     log "$(t xanmod_title)"
     log "=========================================="
@@ -86,15 +91,27 @@ setup_xanmod() {
         check_success "Ключ XanMod добавлен"
     else
         rm -f "$key_tmp" "$keyring_path"
-        error "Не удалось загрузить или обработать ключ XanMod"
-        return 1
+        xanmod_skip "Не удалось загрузить или обработать ключ XanMod, пропускаем установку XanMod"
+        return 0
     fi
     rm -f "$key_tmp"
     echo "deb [signed-by=$keyring_path] http://deb.xanmod.org $distro_codename main" > /etc/apt/sources.list.d/xanmod-release.list
-    check_success "Репозиторий XanMod добавлен" || return 1
+    if ! check_success "Репозиторий XanMod добавлен"; then
+        xanmod_skip "Не удалось добавить репозиторий XanMod, пропускаем установку XanMod"
+        return 0
+    fi
 
-    retry_command "apt update" && check_success "Список пакетов обновлён" || return 1
-    retry_command "DEBIAN_FRONTEND=noninteractive apt install -y $xanmod_package" && check_success "XanMod kernel установлен" || return 1
+    if ! retry_command "apt update"; then
+        xanmod_skip "Не удалось обновить список пакетов, пропускаем установку XanMod"
+        return 0
+    fi
+
+    if ! retry_command "DEBIAN_FRONTEND=noninteractive apt install -y $xanmod_package"; then
+        xanmod_skip "Не удалось установить XanMod, пропускаем без ошибки"
+        return 0
+    fi
+
+    check_success "XanMod kernel установлен"
 
     info "$(t xanmod_grub_check)"
     log "$(t xanmod_done)"
