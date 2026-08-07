@@ -30,10 +30,6 @@ translate_en() {
         opt_15) echo "Install XanMod Kernel" ;;
         opt_16) echo "Apply sysctl hardening (BBR + performance)" ;;
         opt_16_disable) echo "Disable BBR + performance (revert)" ;;
-        opt_17) echo "Enable TCP Fast Open (TFO)" ;;
-        opt_17_disable) echo "Disable TCP Fast Open (revert)" ;;
-        opt_18) echo "Configure MSS clamp" ;;
-        opt_18_disable) echo "Disable MSS clamp (revert)" ;;
         opt_19) echo "Check script updates" ;;
         opt_20) echo "Remove script" ;;
         opt_21) echo "Install WARP NATIVE by distillium" ;;

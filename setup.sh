@@ -50,7 +50,6 @@ ensure_global_install() {
             "scripts/modules/docker.sh"
             "scripts/modules/xanmod.sh"
             "scripts/modules/sysctl_hardening.sh"
-            "scripts/modules/network_tweaks.sh"
             "scripts/modules/trafficguard.sh"
             "scripts/modules/ds_guard.sh"
             "scripts/modules/warp_native.sh"
@@ -124,7 +123,6 @@ source "$MODULES_DIR/uv.sh"
 source "$MODULES_DIR/docker.sh"
 source "$MODULES_DIR/xanmod.sh"
 source "$MODULES_DIR/sysctl_hardening.sh"
-source "$MODULES_DIR/network_tweaks.sh"
 source "$MODULES_DIR/trafficguard.sh"
 source "$MODULES_DIR/ds_guard.sh"
 source "$MODULES_DIR/warp_native.sh"
@@ -151,8 +149,6 @@ install_all() {
     setup_uv
     setup_docker
     setup_sysctl_hardening
-    setup_tcp_fastopen
-    setup_mss_clamp
 
     mkdir -p ~/projects ~/scripts ~/downloads ~/backup && check_success "$(t install_dirs_created)"
 
@@ -197,8 +193,6 @@ selective_install() {
     echo -e " ${GREEN}14.${NC} $(t opt_14)"
     echo -e " ${GREEN}15.${NC} $(t opt_15)"
     echo -e " ${GREEN}16.${NC} $(menu_option_text 16)"
-    echo -e " ${GREEN}17.${NC} $(menu_option_text 17)"
-    echo -e " ${GREEN}18.${NC} $(menu_option_text 18)"
     echo -e " ${GREEN}21.${NC} $(menu_option_text 21)"
     echo ""
     read -rp "${PROMPT_PREFIX} $(t selective_input) " raw
@@ -230,8 +224,6 @@ selective_install() {
             14) setup_docker ;;
             15) setup_xanmod ;;
             16) toggle_sysctl_hardening ;;
-            17) toggle_tcp_fastopen ;;
-            18) toggle_mss_clamp ;;
             21) setup_warp_native ;;
             *) warning "$(t selective_invalid): $item" ;;
         esac
@@ -262,9 +254,10 @@ expand_selection() {
 is_swap_enabled() { swapon --show 2>/dev/null | tail -n +2 | grep -q .; }
 is_ulimits_enabled() { [[ -f /etc/security/limits.d/99-server-opt.conf ]]; }
 is_firewall_enabled() { ufw status 2>/dev/null | grep -qi "Status: active" || systemctl is-active --quiet fail2ban; }
-is_sysctl_hardening_enabled() { [[ -f /etc/sysctl.d/99-server-opt.conf ]]; }
-is_tfo_enabled() { [[ -f /etc/sysctl.d/98-karenet-tfo.conf ]] || [[ "$(sysctl -n net.ipv4.tcp_fastopen 2>/dev/null || echo 0)" == "3" ]]; }
-is_mss_clamp_enabled() { systemctl is-enabled --quiet karenet-mss-clamp.service 2>/dev/null || [[ -f /etc/systemd/system/karenet-mss-clamp.service ]]; }
+is_sysctl_hardening_enabled() {
+    grep -qxF 'net.core.default_qdisc=fq' /etc/sysctl.conf 2>/dev/null &&
+        grep -qxF 'net.ipv4.tcp_congestion_control=bbr' /etc/sysctl.conf 2>/dev/null
+}
 is_trafficguard_enabled() { is_trafficguard_installed; }
 is_ds_guard_enabled() { is_ds_guard_installed; }
 is_warp_native_enabled() { is_warp_native_installed; }
@@ -273,8 +266,6 @@ toggle_swap() { if is_swap_enabled; then disable_swap; else setup_swap; fi; }
 toggle_ulimits() { if is_ulimits_enabled; then disable_ulimits; else setup_ulimits; fi; }
 toggle_firewall() { if is_firewall_enabled; then disable_firewall; else setup_firewall; fi; }
 toggle_sysctl_hardening() { if is_sysctl_hardening_enabled; then disable_sysctl_hardening; else setup_sysctl_hardening; fi; }
-toggle_tcp_fastopen() { if is_tfo_enabled; then disable_tcp_fastopen; else setup_tcp_fastopen; fi; }
-toggle_mss_clamp() { if is_mss_clamp_enabled; then disable_mss_clamp; else setup_mss_clamp; fi; }
 
 menu_option_text() {
     local option="$1"
@@ -285,8 +276,6 @@ menu_option_text() {
         10) if is_trafficguard_enabled; then t opt_10_installed; else t opt_10; fi ;;
         23) if is_ds_guard_enabled; then t opt_23_installed; else t opt_23; fi ;;
         16) if is_sysctl_hardening_enabled; then t opt_16_disable; else t opt_16; fi ;;
-        17) if is_tfo_enabled; then t opt_17_disable; else t opt_17; fi ;;
-        18) if is_mss_clamp_enabled; then t opt_18_disable; else t opt_18; fi ;;
         21) if is_warp_native_enabled; then t opt_21_installed; else t opt_21; fi ;;
         *) t "opt_${option}" ;;
     esac
@@ -462,8 +451,6 @@ show_menu() {
     echo -e "${MAGENTA}$(t category_performance)${NC}"
     echo -e " ${GREEN}15.${NC} $(t opt_15)"
     echo -e " ${GREEN}16.${NC} $(menu_option_text 16)"
-    echo -e " ${GREEN}17.${NC} $(menu_option_text 17)"
-    echo -e " ${GREEN}18.${NC} $(menu_option_text 18)"
     echo ""
     echo -e "${MAGENTA}$(t category_misc)${NC}"
     echo -e " ${GREEN}19.${NC} $(t opt_19)"
@@ -505,8 +492,6 @@ main() {
             14) setup_docker ;;
             15) setup_xanmod ;;
             16) toggle_sysctl_hardening ;;
-            17) toggle_tcp_fastopen ;;
-            18) toggle_mss_clamp ;;
             19) check_script_updates ;;
             20) uninstall_script ;;
             21) setup_warp_native ;;
