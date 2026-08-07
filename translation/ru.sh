@@ -39,8 +39,10 @@ translate_ru() {
         opt_21) echo "Установить WARP NATIVE by distillium" ;;
         opt_21_installed) echo "WARP NATIVE уже установлен" ;;
         opt_22) echo "Обновить скрипт сейчас" ;;
+        opt_23) echo "Установить блокировку торрентов (ds-guard)" ;;
+        opt_23_installed) echo "Блокировка торрентов уже установлена" ;;
         opt_0) echo "🚪 Выйти в терминал" ;;
-        choose_item) echo "Выберите пункт (0-22):" ;;
+        choose_item) echo "Выберите пункт (0-23):" ;;
         reboot_confirm) echo "Хотите перезагрузить систему сейчас? (y/N):" ;;
         rebooting) echo "Перезагрузка системы..." ;;
         reboot_cancelled) echo "Перезагрузка отменена" ;;
@@ -153,6 +155,9 @@ translate_ru() {
         uv_title) echo "Установка uv" ;;
         uv_installing) echo "Установка uv..." ;;
         uv_done) echo "uv успешно установлен" ;;
+        ds_guard_installing) echo "Установка блокировки торрентов (ds-guard)..." ;;
+        ds_guard_done) echo "Блокировка торрентов установлена" ;;
+        ds_guard_failed) echo "Не удалось установить блокировку торрентов" ;;
         invalid_choice) echo "Неверный выбор. Попробуйте снова." ;;
         press_enter) echo "Нажмите Enter для продолжения..." ;;
         exit_log) echo "Выход из программы" ;;

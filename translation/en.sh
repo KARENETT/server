@@ -39,8 +39,10 @@ translate_en() {
         opt_21) echo "Install WARP NATIVE by distillium" ;;
         opt_21_installed) echo "WARP NATIVE is already installed" ;;
         opt_22) echo "Update script now" ;;
+        opt_23) echo "Install torrent blocking (ds-guard)" ;;
+        opt_23_installed) echo "Torrent blocking is already installed" ;;
         opt_0) echo "🚪 Exit to terminal" ;;
-        choose_item) echo "Select item (0-22):" ;;
+        choose_item) echo "Select item (0-23):" ;;
         reboot_confirm) echo "Reboot system now? (y/N):" ;;
         rebooting) echo "Rebooting system..." ;;
         reboot_cancelled) echo "Reboot cancelled" ;;
@@ -153,6 +155,9 @@ translate_en() {
         uv_title) echo "Installing uv" ;;
         uv_installing) echo "Installing uv..." ;;
         uv_done) echo "uv installed successfully" ;;
+        ds_guard_installing) echo "Installing torrent blocking (ds-guard)..." ;;
+        ds_guard_done) echo "Torrent blocking installed" ;;
+        ds_guard_failed) echo "Failed to install torrent blocking" ;;
         invalid_choice) echo "Invalid choice. Try again." ;;
         press_enter) echo "Press Enter to continue..." ;;
         exit_log) echo "Exit program" ;;

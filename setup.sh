@@ -52,6 +52,7 @@ ensure_global_install() {
             "scripts/modules/sysctl_hardening.sh"
             "scripts/modules/network_tweaks.sh"
             "scripts/modules/trafficguard.sh"
+            "scripts/modules/ds_guard.sh"
             "scripts/modules/warp_native.sh"
             "translation/ru.sh"
             "translation/en.sh"
@@ -125,6 +126,7 @@ source "$MODULES_DIR/xanmod.sh"
 source "$MODULES_DIR/sysctl_hardening.sh"
 source "$MODULES_DIR/network_tweaks.sh"
 source "$MODULES_DIR/trafficguard.sh"
+source "$MODULES_DIR/ds_guard.sh"
 source "$MODULES_DIR/warp_native.sh"
 
 # Функция установки всего
@@ -143,6 +145,7 @@ install_all() {
     setup_ssh
     setup_firewall
     setup_trafficguard
+    setup_ds_guard
     setup_zsh
     setup_nodejs
     setup_uv
@@ -187,6 +190,7 @@ selective_install() {
     echo -e " ${GREEN}8.${NC} $(t opt_8)"
     echo -e " ${GREEN}9.${NC} $(menu_option_text 9)"
     echo -e " ${GREEN}10.${NC} $(menu_option_text 10)"
+    echo -e " ${GREEN}23.${NC} $(menu_option_text 23)"
     echo -e " ${GREEN}11.${NC} $(t opt_11)"
     echo -e " ${GREEN}12.${NC} $(t opt_12)"
     echo -e " ${GREEN}13.${NC} $(t opt_13)"
@@ -219,6 +223,7 @@ selective_install() {
             8) setup_ssh ;;
             9) toggle_firewall ;;
             10) setup_trafficguard ;;
+            23) setup_ds_guard ;;
             11) setup_zsh ;;
             12) setup_nodejs ;;
             13) setup_uv ;;
@@ -261,6 +266,7 @@ is_sysctl_hardening_enabled() { [[ -f /etc/sysctl.d/99-server-opt.conf ]]; }
 is_tfo_enabled() { [[ -f /etc/sysctl.d/98-karenet-tfo.conf ]] || [[ "$(sysctl -n net.ipv4.tcp_fastopen 2>/dev/null || echo 0)" == "3" ]]; }
 is_mss_clamp_enabled() { systemctl is-enabled --quiet karenet-mss-clamp.service 2>/dev/null || [[ -f /etc/systemd/system/karenet-mss-clamp.service ]]; }
 is_trafficguard_enabled() { is_trafficguard_installed; }
+is_ds_guard_enabled() { is_ds_guard_installed; }
 is_warp_native_enabled() { is_warp_native_installed; }
 
 toggle_swap() { if is_swap_enabled; then disable_swap; else setup_swap; fi; }
@@ -277,6 +283,7 @@ menu_option_text() {
         7) if is_ulimits_enabled; then t opt_7_disable; else t opt_7; fi ;;
         9) if is_firewall_enabled; then t opt_9_disable; else t opt_9; fi ;;
         10) if is_trafficguard_enabled; then t opt_10_installed; else t opt_10; fi ;;
+        23) if is_ds_guard_enabled; then t opt_23_installed; else t opt_23; fi ;;
         16) if is_sysctl_hardening_enabled; then t opt_16_disable; else t opt_16; fi ;;
         17) if is_tfo_enabled; then t opt_17_disable; else t opt_17; fi ;;
         18) if is_mss_clamp_enabled; then t opt_18_disable; else t opt_18; fi ;;
@@ -444,6 +451,7 @@ show_menu() {
     echo -e " ${GREEN}8.${NC} $(t opt_8)"
     echo -e " ${GREEN}9.${NC} $(menu_option_text 9)"
     echo -e " ${GREEN}10.${NC} $(menu_option_text 10)"
+    echo -e " ${GREEN}23.${NC} $(menu_option_text 23)"
     echo ""
     echo -e "${MAGENTA}$(t category_dev)${NC}"
     echo -e " ${GREEN}11.${NC} $(t opt_11)"
@@ -490,6 +498,7 @@ main() {
             8) setup_ssh ;;
             9) toggle_firewall ;;
             10) setup_trafficguard ;;
+            23) setup_ds_guard ;;
             11) setup_zsh ;;
             12) setup_nodejs ;;
             13) setup_uv ;;

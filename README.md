@@ -82,7 +82,7 @@ sudo karenet-setup
 |:--|:--|
 | System | Базовые системные пакеты, user/system tweaks |
 | Network | sysctl hardening, BBR, network tuning |
-| Security | SSH, firewall, fail2ban, trafficguard |
+| Security | SSH, firewall, fail2ban, trafficguard, блокировка торрентов через ds-guard |
 | Runtime | Docker, Node.js, uv, ZSH, XanMod, WARP Native |
 
 ---
