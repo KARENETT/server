@@ -15,9 +15,9 @@ setup_trafficguard() {
         return 0
     fi
 
-    info "URL: https://raw.githubusercontent.com/DonMatteoVPN/TrafficGuard-auto/refs/heads/main/install-trafficguard.sh"
+    info "URL: https://raw.githubusercontent.com/KARENETT/TrafficGuard-auto/refs/heads/main/install-trafficguard.sh"
     log "Установка защиты от сканеров (TrafficGuard)..."
-    if curl -fsSL "https://raw.githubusercontent.com/DonMatteoVPN/TrafficGuard-auto/refs/heads/main/install-trafficguard.sh" | bash; then
+    if curl -fsSL "https://raw.githubusercontent.com/KARENETT/TrafficGuard-auto/refs/heads/main/install-trafficguard.sh" | bash; then
         check_success "TrafficGuard установлен"
     else
         error "Не удалось установить TrafficGuard"
