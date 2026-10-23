@@ -36,9 +36,10 @@ translate_ru() {
         opt_21_installed) echo "WARP NATIVE уже установлен" ;;
         opt_22) echo "Обновить скрипт сейчас" ;;
         opt_23) echo "Установить блокировку торрентов (ds-guard)" ;;
+        opt_24) echo "Установка self-steal с помощью Caddy" ;;
         opt_23_installed) echo "Блокировка торрентов уже установлена" ;;
         opt_0) echo "🚪 Выйти в терминал" ;;
-        choose_item) echo "Выберите пункт (0-23):" ;;
+        choose_item) echo "Выберите пункт (0-24):" ;;
         reboot_confirm) echo "Хотите перезагрузить систему сейчас? (y/N):" ;;
         rebooting) echo "Перезагрузка системы..." ;;
         reboot_cancelled) echo "Перезагрузка отменена" ;;
@@ -74,6 +75,16 @@ translate_ru() {
         remote_install_cancelled) echo "Установка отменена" ;;
         swap_confirm) echo "Продолжить настройку SWAP? (Y/n):" ;;
         swap_recreate) echo "Обнаружен существующий /swapfile, он будет пересоздан" ;;
+        caddy_domain_prompt) echo "Введите домен self-steal (например, node.example.com):" ;;
+        caddy_domain_invalid) echo "Некорректный домен. Используйте полное доменное имя, например node.example.com." ;;
+        caddy_apt_required) echo "Этот пункт поддерживается только на Debian/Ubuntu с apt." ;;
+        caddy_dns_notice) echo "Убедитесь, что DNS домена направлен прямо на сервер (без прокси)." ;;
+        caddy_ports_notice) echo "Порт 80 нужен для ACME, а внешний 443 — для Xray; firewall не меняется." ;;
+        caddy_asset_missing) echo "Не найден файл сайта self-steal." ;;
+        caddy_installing) echo "Установка Caddy и настройка self-steal..." ;;
+        caddy_config_backup) echo "Старая конфигурация Caddy сохранена:" ;;
+        caddy_config_failed) echo "Не удалось проверить или перезагрузить Caddy; прежний Caddyfile восстановлен, если он существовал." ;;
+        caddy_done) echo "Caddy self-steal успешно настроен." ;;
         ssh_port_prompt) echo "SSH порт (по умолчанию 33556):" ;;
         packages_confirm) echo "Продолжить установку? (Y/n):" ;;
         xanmod_confirm) echo "Продолжить установку XanMod? (Y/n):" ;;

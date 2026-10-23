@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VEILSTORE</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        min-height: 100%;
+        background: #000;
+        color: #fff;
+        font-family: "Geist", sans-serif;
+      }
+
+      body {
+        min-height: 100vh;
+        overflow: hidden;
+      }
+
+      .page {
+        position: relative;
+        width: 100%;
+        min-height: 100vh;
+        padding: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .header {
+        position: absolute;
+        top: 32px;
+        left: 32px;
+        right: 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        opacity: 0.72;
+      }
+
+      .header span {
+        white-space: nowrap;
+      }
+
+      .center {
+        text-align: center;
+      }
+
+      .label {
+        margin-bottom: 22px;
+        font-size: clamp(11px, 1vw, 13px);
+        font-weight: 500;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        opacity: 0.58;
+      }
+
+      .brand {
+        font-size: clamp(56px, 12vw, 176px);
+        font-weight: 600;
+        letter-spacing: -0.075em;
+        line-height: 0.86;
+        text-transform: uppercase;
+      }
+
+      .subtitle {
+        margin-top: 26px;
+        font-size: clamp(12px, 1.2vw, 16px);
+        font-weight: 400;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        opacity: 0.68;
+      }
+
+      .footer {
+        position: absolute;
+        left: 32px;
+        right: 32px;
+        bottom: 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 24px;
+      }
+
+      .coming-soon {
+        font-size: clamp(13px, 1.4vw, 18px);
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        opacity: 0.86;
+      }
+
+      .details {
+        max-width: 360px;
+        text-align: right;
+        font-size: clamp(11px, 1vw, 13px);
+        line-height: 1.6;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        opacity: 0.52;
+      }
+
+      .line {
+        position: absolute;
+        background: #fff;
+        opacity: 0.12;
+      }
+
+      .line-top {
+        top: 82px;
+        left: 32px;
+        right: 32px;
+        height: 1px;
+      }
+
+      .line-bottom {
+        bottom: 82px;
+        left: 32px;
+        right: 32px;
+        height: 1px;
+      }
+
+      .grain {
+        pointer-events: none;
+        position: fixed;
+        inset: 0;
+        opacity: 0.055;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.18) 1px, transparent 1px);
+        background-size: 42px 42px;
+      }
+
+      @media (max-width: 700px) {
+        .page {
+          padding: 22px;
+        }
+
+        .header {
+          top: 22px;
+          left: 22px;
+          right: 22px;
+          font-size: 10px;
+        }
+
+        .header span:nth-child(2) {
+          display: none;
+        }
+
+        .footer {
+          left: 22px;
+          right: 22px;
+          bottom: 24px;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+
+        .details {
+          text-align: center;
+          max-width: 280px;
+        }
+
+        .line-top {
+          top: 70px;
+          left: 22px;
+          right: 22px;
+        }
+
+        .line-bottom {
+          bottom: 118px;
+          left: 22px;
+          right: 22px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="grain"></div>
+
+    <div class="page">
+      <div class="line line-top"></div>
+      <div class="line line-bottom"></div>
+
+      <header class="header">
+        <span>VEILSTORE</span>
+        <span>CONTEMPORARY CLOTHING</span>
+        <span>EST. 2027</span>
+      </header>
+
+      <main class="center">
+        <div class="label">NEW COLLECTION</div>
+        <h1 class="brand">VEILSTORE</h1>
+        <div class="subtitle">MINIMAL WARDROBE / MODERN SILHOUETTES</div>
+      </main>
+
+      <footer class="footer">
+        <div class="coming-soon">OPENING SOON IN 2027</div>
+        <div class="details">
+          A new fashion space for clean cuts, quiet luxury, and everyday essentials.
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

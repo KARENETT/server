@@ -81,7 +81,7 @@ sudo karenet-setup
 | Категория | Что настраивается |
 |:--|:--|
 | System | Базовые системные пакеты, user/system tweaks |
-| Network | sysctl hardening, BBR, network tuning |
+| Network | sysctl hardening, BBR, network tuning, Caddy self-steal |
 | Security | SSH, firewall, fail2ban, trafficguard, блокировка торрентов через ds-guard |
 | Runtime | Docker, Node.js, uv, ZSH, XanMod, WARP Native |
 
@@ -91,6 +91,7 @@ sudo karenet-setup
 
 - `setup.sh` - основной интерактивный установщик
 - `scripts/modules/` - независимые модули настройки
+- `scripts/assets/selfsteal/index.html` - страница-заглушка для Caddy self-steal
 - `scripts/utils.sh` - общие функции и helper-утилиты
 - `translation/en.sh`, `translation/ru.sh` - локализация интерфейса
 

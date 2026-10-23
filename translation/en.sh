@@ -36,9 +36,10 @@ translate_en() {
         opt_21_installed) echo "WARP NATIVE is already installed" ;;
         opt_22) echo "Update script now" ;;
         opt_23) echo "Install torrent blocking (ds-guard)" ;;
+        opt_24) echo "Install self-steal with Caddy" ;;
         opt_23_installed) echo "Torrent blocking is already installed" ;;
         opt_0) echo "🚪 Exit to terminal" ;;
-        choose_item) echo "Select item (0-23):" ;;
+        choose_item) echo "Select item (0-24):" ;;
         reboot_confirm) echo "Reboot system now? (y/N):" ;;
         rebooting) echo "Rebooting system..." ;;
         reboot_cancelled) echo "Reboot cancelled" ;;
@@ -74,6 +75,16 @@ translate_en() {
         remote_install_cancelled) echo "Installation cancelled" ;;
         swap_confirm) echo "Continue SWAP setup? (Y/n):" ;;
         swap_recreate) echo "Existing /swapfile found, it will be recreated" ;;
+        caddy_domain_prompt) echo "Enter the self-steal domain (for example, node.example.com):" ;;
+        caddy_domain_invalid) echo "Invalid domain. Enter a fully qualified domain name, for example node.example.com." ;;
+        caddy_apt_required) echo "This option requires an apt-based Debian/Ubuntu system." ;;
+        caddy_dns_notice) echo "Ensure the domain DNS points directly to this server (no proxy)." ;;
+        caddy_ports_notice) echo "Port 80 is needed for ACME; external port 443 is for Xray. Firewall rules are not changed." ;;
+        caddy_asset_missing) echo "The self-steal website file was not found." ;;
+        caddy_installing) echo "Installing Caddy and configuring self-steal..." ;;
+        caddy_config_backup) echo "Previous Caddy configuration saved to:" ;;
+        caddy_config_failed) echo "Caddy validation or reload failed; the previous Caddyfile was restored if one existed." ;;
+        caddy_done) echo "Caddy self-steal configured successfully." ;;
         ssh_port_prompt) echo "SSH port (default 33556):" ;;
         packages_confirm) echo "Continue installation? (Y/n):" ;;
         xanmod_confirm) echo "Continue XanMod installation? (Y/n):" ;;

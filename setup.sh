@@ -53,6 +53,8 @@ ensure_global_install() {
             "scripts/modules/trafficguard.sh"
             "scripts/modules/ds_guard.sh"
             "scripts/modules/warp_native.sh"
+            "scripts/modules/caddy_selfsteal.sh"
+            "scripts/assets/selfsteal/index.html"
             "translation/ru.sh"
             "translation/en.sh"
         )
@@ -125,6 +127,7 @@ source "$MODULES_DIR/xanmod.sh"
 source "$MODULES_DIR/sysctl_hardening.sh"
 source "$MODULES_DIR/trafficguard.sh"
 source "$MODULES_DIR/ds_guard.sh"
+source "$MODULES_DIR/caddy_selfsteal.sh"
 source "$MODULES_DIR/warp_native.sh"
 
 # Функция установки всего
@@ -187,6 +190,7 @@ selective_install() {
     echo -e " ${GREEN}9.${NC} $(menu_option_text 9)"
     echo -e " ${GREEN}10.${NC} $(menu_option_text 10)"
     echo -e " ${GREEN}23.${NC} $(menu_option_text 23)"
+    echo -e " ${GREEN}24.${NC} $(t opt_24)"
     echo -e " ${GREEN}11.${NC} $(t opt_11)"
     echo -e " ${GREEN}12.${NC} $(t opt_12)"
     echo -e " ${GREEN}13.${NC} $(t opt_13)"
@@ -225,6 +229,7 @@ selective_install() {
             15) setup_xanmod ;;
             16) toggle_sysctl_hardening ;;
             21) setup_warp_native ;;
+            24) setup_caddy_selfsteal ;;
             *) warning "$(t selective_invalid): $item" ;;
         esac
     done
@@ -441,6 +446,7 @@ show_menu() {
     echo -e " ${GREEN}9.${NC} $(menu_option_text 9)"
     echo -e " ${GREEN}10.${NC} $(menu_option_text 10)"
     echo -e " ${GREEN}23.${NC} $(menu_option_text 23)"
+    echo -e " ${GREEN}24.${NC} $(t opt_24)"
     echo ""
     echo -e "${MAGENTA}$(t category_dev)${NC}"
     echo -e " ${GREEN}11.${NC} $(t opt_11)"
@@ -495,6 +501,7 @@ main() {
             19) check_script_updates ;;
             20) uninstall_script ;;
             21) setup_warp_native ;;
+            24) setup_caddy_selfsteal ;;
             22) self_update_script ;;
             0) log "$(t exit_log)"; exit 0 ;;
             *) error "$(t invalid_choice)" ;;
