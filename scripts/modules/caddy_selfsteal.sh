@@ -13,7 +13,7 @@ render_selfsteal_caddyfile() {
     cat <<EOF
 {
     http_port 80
-    https_port 443
+    https_port 9443
     default_sni $domain
     fallback_sni $domain
     auto_https disable_redirects
