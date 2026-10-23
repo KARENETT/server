@@ -81,7 +81,7 @@ sudo karenet-setup
 | Категория | Что настраивается |
 |:--|:--|
 | System | Базовые системные пакеты, user/system tweaks |
-| Network | sysctl hardening, BBR, network tuning, Caddy self-steal |
+| Network | sysctl hardening, BBR, network tuning, Caddy self-steal, Psiphon |
 | Security | SSH, firewall, fail2ban, trafficguard, блокировка торрентов через ds-guard |
 | Runtime | Docker, Node.js, uv, ZSH, XanMod, WARP Native |
 

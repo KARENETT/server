@@ -54,6 +54,7 @@ ensure_global_install() {
             "scripts/modules/ds_guard.sh"
             "scripts/modules/warp_native.sh"
             "scripts/modules/caddy_selfsteal.sh"
+            "scripts/modules/psiphon.sh"
             "scripts/assets/selfsteal/index.html"
             "translation/ru.sh"
             "translation/en.sh"
@@ -129,6 +130,7 @@ source "$MODULES_DIR/trafficguard.sh"
 source "$MODULES_DIR/ds_guard.sh"
 source "$MODULES_DIR/caddy_selfsteal.sh"
 source "$MODULES_DIR/warp_native.sh"
+source "$MODULES_DIR/psiphon.sh"
 
 # Функция установки всего
 install_all() {
@@ -152,6 +154,9 @@ install_all() {
     setup_uv
     setup_docker
     setup_sysctl_hardening
+    if confirm_yes_no "$(t psiphon_full_install_prompt)"; then
+        setup_psiphon
+    fi
 
     mkdir -p ~/projects ~/scripts ~/downloads ~/backup && check_success "$(t install_dirs_created)"
 
@@ -198,6 +203,7 @@ selective_install() {
     echo -e " ${GREEN}15.${NC} $(t opt_15)"
     echo -e " ${GREEN}16.${NC} $(menu_option_text 16)"
     echo -e " ${GREEN}21.${NC} $(menu_option_text 21)"
+    echo -e " ${GREEN}25.${NC} $(t opt_25)"
     echo ""
     read -rp "${PROMPT_PREFIX} $(t selective_input) " raw
 
@@ -230,6 +236,7 @@ selective_install() {
             16) toggle_sysctl_hardening ;;
             21) setup_warp_native ;;
             24) setup_caddy_selfsteal ;;
+            25) setup_psiphon ;;
             *) warning "$(t selective_invalid): $item" ;;
         esac
     done
@@ -463,6 +470,7 @@ show_menu() {
     echo -e " ${GREEN}20.${NC} $(t opt_20)"
     echo -e " ${GREEN}21.${NC} $(menu_option_text 21)"
     echo -e " ${GREEN}22.${NC} $(t opt_22)"
+    echo -e " ${GREEN}25.${NC} $(t opt_25)"
     echo ""
     echo -e "${GRAY}${divider}${NC}"
     echo -e " ${RED}0.${NC} $(t opt_0)"
@@ -502,6 +510,7 @@ main() {
             20) uninstall_script ;;
             21) setup_warp_native ;;
             24) setup_caddy_selfsteal ;;
+            25) setup_psiphon ;;
             22) self_update_script ;;
             0) log "$(t exit_log)"; exit 0 ;;
             *) error "$(t invalid_choice)" ;;

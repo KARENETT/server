@@ -37,9 +37,10 @@ translate_ru() {
         opt_22) echo "Обновить скрипт сейчас" ;;
         opt_23) echo "Установить блокировку торрентов (ds-guard)" ;;
         opt_24) echo "Установка self-steal с помощью Caddy" ;;
+        opt_25) echo "Установить Psiphon (регион DE)" ;;
         opt_23_installed) echo "Блокировка торрентов уже установлена" ;;
         opt_0) echo "🚪 Выйти в терминал" ;;
-        choose_item) echo "Выберите пункт (0-24):" ;;
+        choose_item) echo "Выберите пункт (0-25):" ;;
         reboot_confirm) echo "Хотите перезагрузить систему сейчас? (y/N):" ;;
         rebooting) echo "Перезагрузка системы..." ;;
         reboot_cancelled) echo "Перезагрузка отменена" ;;
@@ -85,6 +86,12 @@ translate_ru() {
         caddy_config_backup) echo "Старая конфигурация Caddy сохранена:" ;;
         caddy_config_failed) echo "Не удалось проверить или перезагрузить Caddy; прежний Caddyfile восстановлен, если он существовал." ;;
         caddy_done) echo "Caddy self-steal успешно настроен." ;;
+        psiphon_full_install_prompt) echo "Установить Psiphon для региона DE в рамках полной настройки? (y/N):" ;;
+        psiphon_temp_failed) echo "Не удалось создать временный файл установщика Psiphon." ;;
+        psiphon_installing) echo "Установка Psiphon (регион DE)..." ;;
+        psiphon_download_failed) echo "Не удалось скачать установщик Psiphon." ;;
+        psiphon_failed) echo "Установщик Psiphon завершился с ошибкой." ;;
+        psiphon_done) echo "Psiphon (регион DE) установлен." ;;
         ssh_port_prompt) echo "SSH порт (по умолчанию 33556):" ;;
         packages_confirm) echo "Продолжить установку? (Y/n):" ;;
         xanmod_confirm) echo "Продолжить установку XanMod? (Y/n):" ;;

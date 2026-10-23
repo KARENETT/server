@@ -37,9 +37,10 @@ translate_en() {
         opt_22) echo "Update script now" ;;
         opt_23) echo "Install torrent blocking (ds-guard)" ;;
         opt_24) echo "Install self-steal with Caddy" ;;
+        opt_25) echo "Install Psiphon (region DE)" ;;
         opt_23_installed) echo "Torrent blocking is already installed" ;;
         opt_0) echo "🚪 Exit to terminal" ;;
-        choose_item) echo "Select item (0-24):" ;;
+        choose_item) echo "Select item (0-25):" ;;
         reboot_confirm) echo "Reboot system now? (y/N):" ;;
         rebooting) echo "Rebooting system..." ;;
         reboot_cancelled) echo "Reboot cancelled" ;;
@@ -85,6 +86,12 @@ translate_en() {
         caddy_config_backup) echo "Previous Caddy configuration saved to:" ;;
         caddy_config_failed) echo "Caddy validation or reload failed; the previous Caddyfile was restored if one existed." ;;
         caddy_done) echo "Caddy self-steal configured successfully." ;;
+        psiphon_full_install_prompt) echo "Install Psiphon for region DE as part of full setup? (y/N):" ;;
+        psiphon_temp_failed) echo "Failed to create a temporary file for the Psiphon installer." ;;
+        psiphon_installing) echo "Installing Psiphon (region DE)..." ;;
+        psiphon_download_failed) echo "Failed to download the Psiphon installer." ;;
+        psiphon_failed) echo "The Psiphon installer failed." ;;
+        psiphon_done) echo "Psiphon (region DE) installed." ;;
         ssh_port_prompt) echo "SSH port (default 33556):" ;;
         packages_confirm) echo "Continue installation? (Y/n):" ;;
         xanmod_confirm) echo "Continue XanMod installation? (Y/n):" ;;
