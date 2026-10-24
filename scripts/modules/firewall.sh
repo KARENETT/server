@@ -1,11 +1,59 @@
 setup_firewall() {
+    local ssh_port=""
+    local ssh_port_input=""
+    local panel_ip=""
+    local panel_ip_input=""
+    local panel_port=""
+    local panel_port_input=""
+    local saved_panel_ip=""
+    local saved_panel_port=""
+    local panel_rule_updated=0
+
     log "=========================================="
     log "Настройка UFW + Fail2Ban + отключение ICMP"
     log "=========================================="
     echo ""
-    read -rp "${PROMPT_PREFIX} $(t ssh_port_prompt) " ssh_port
-    ssh_port=${ssh_port:-33556}
-    echo ""
+    while true; do
+        read -rp "${PROMPT_PREFIX} $(t ssh_port_prompt) " ssh_port_input || return 1
+        ssh_port_input="${ssh_port_input:-33556}"
+        if is_valid_tcp_port "$ssh_port_input"; then
+            ssh_port=$((10#$ssh_port_input))
+            break
+        fi
+        warning "$(t ssh_port_invalid)"
+    done
+    read_remnanode_panel_rule saved_panel_ip saved_panel_port
+    panel_ip="$saved_panel_ip"
+    if ! is_valid_tcp_port "$saved_panel_port"; then
+        saved_panel_port="$REMNANODE_NODE_PORT"
+    fi
+    saved_panel_port=$((10#$saved_panel_port))
+    panel_port="$saved_panel_port"
+    if confirm_yes_no "$(t remnanode_firewall_configure_prompt)"; then
+        if ! command -v python3 >/dev/null 2>&1; then
+            error "$(t remnanode_validation_tools_required)"
+            return 1
+        fi
+        while true; do
+            read -rp "${PROMPT_PREFIX} $(t remnanode_panel_ip_prompt) [${panel_ip}]: " panel_ip_input || return 1
+            panel_ip_input="${panel_ip_input:-$panel_ip}"
+            if is_valid_ip_address "$panel_ip_input"; then
+                panel_ip="$panel_ip_input"
+                break
+            fi
+            warning "$(t remnanode_panel_ip_invalid)"
+        done
+        while true; do
+            read -rp "${PROMPT_PREFIX} $(t remnanode_node_port_prompt) [$panel_port]: " panel_port_input || return 1
+            panel_port_input="${panel_port_input:-$panel_port}"
+            if is_valid_tcp_port "$panel_port_input"; then
+                panel_port=$((10#$panel_port_input))
+                break
+            fi
+            warning "$(t remnanode_node_port_invalid)"
+        done
+        panel_rule_updated=1
+    fi
 
     log "Сброс и базовая настройка UFW..."
     if ! command -v ufw >/dev/null 2>&1; then
@@ -21,6 +69,17 @@ setup_firewall() {
     ufw limit "${ssh_port}/tcp" comment 'SSH'
     ufw allow 80/tcp comment 'HTTP (ACME/fallback)'
     ufw allow 443/tcp comment 'HTTPS / VLESS fallback'
+
+    if [[ -n "$panel_ip" ]]; then
+        if ! ufw allow from "$panel_ip" to any port "$panel_port" proto tcp comment 'remnanode: только панель'; then
+            warning "$(t remnanode_firewall_restore_failed)"
+            if (( panel_rule_updated )) && [[ -n "$saved_panel_ip" ]]; then
+                ufw allow from "$saved_panel_ip" to any port "$saved_panel_port" proto tcp comment 'remnanode: только панель' || warning "$(t remnanode_firewall_restore_failed)"
+            fi
+        elif (( panel_rule_updated )) || [[ -r "$REMNANODE_PANEL_IP_FILE" && ! -r "$REMNANODE_PANEL_RULE_FILE" ]]; then
+            write_remnanode_panel_rule "$panel_ip" "$panel_port" || warning "$(t remnanode_panel_rule_save_failed)"
+        fi
+    fi
 
     ufw --force enable && check_success "UFW включён и базовые порты открыты"
 

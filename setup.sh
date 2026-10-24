@@ -54,6 +54,7 @@ ensure_global_install() {
             "scripts/modules/ds_guard.sh"
             "scripts/modules/warp_native.sh"
             "scripts/modules/caddy_selfsteal.sh"
+            "scripts/modules/remnanode.sh"
             "scripts/modules/psiphon.sh"
             "scripts/assets/selfsteal/index.html"
             "translation/ru.sh"
@@ -129,6 +130,7 @@ source "$MODULES_DIR/sysctl_hardening.sh"
 source "$MODULES_DIR/trafficguard.sh"
 source "$MODULES_DIR/ds_guard.sh"
 source "$MODULES_DIR/caddy_selfsteal.sh"
+source "$MODULES_DIR/remnanode.sh"
 source "$MODULES_DIR/warp_native.sh"
 source "$MODULES_DIR/psiphon.sh"
 
@@ -186,24 +188,35 @@ selective_install() {
     echo -e "${GRAY}────────────────────────────────────────────────────────────────────────────────${NC}"
     echo ""
     echo -e "${YELLOW}$(t selective_title)${NC}"
+    echo -e "${MAGENTA}$(t category_system)${NC}"
     echo -e " ${GREEN}3.${NC} $(t opt_3)"
     echo -e " ${GREEN}4.${NC} $(t opt_4)"
     echo -e " ${GREEN}5.${NC} $(t opt_5)"
     echo -e " ${GREEN}6.${NC} $(menu_option_text 6)"
     echo -e " ${GREEN}7.${NC} $(menu_option_text 7)"
+    echo -e "${MAGENTA}$(t category_security)${NC}"
     echo -e " ${GREEN}8.${NC} $(t opt_8)"
     echo -e " ${GREEN}9.${NC} $(menu_option_text 9)"
     echo -e " ${GREEN}10.${NC} $(menu_option_text 10)"
     echo -e " ${GREEN}23.${NC} $(menu_option_text 23)"
-    echo -e " ${GREEN}24.${NC} $(t opt_24)"
+    echo -e "${MAGENTA}$(t category_dev)${NC}"
     echo -e " ${GREEN}11.${NC} $(t opt_11)"
     echo -e " ${GREEN}12.${NC} $(t opt_12)"
     echo -e " ${GREEN}13.${NC} $(t opt_13)"
     echo -e " ${GREEN}14.${NC} $(t opt_14)"
+    echo -e "${MAGENTA}$(t category_performance)${NC}"
     echo -e " ${GREEN}15.${NC} $(t opt_15)"
     echo -e " ${GREEN}16.${NC} $(menu_option_text 16)"
+    echo -e "${MAGENTA}$(t category_misc)${NC}"
+    echo -e " ${GREEN}19.${NC} $(t opt_19)"
+    echo -e " ${GREEN}20.${NC} $(t opt_20)"
     echo -e " ${GREEN}21.${NC} $(menu_option_text 21)"
+    echo -e " ${GREEN}22.${NC} $(t opt_22)"
     echo -e " ${GREEN}25.${NC} $(t opt_25)"
+    echo -e "${MAGENTA}$(t category_selfsteal)${NC}"
+    echo -e " ${GREEN}24.${NC} $(t opt_24)"
+    echo -e "${MAGENTA}$(t category_remnanode)${NC}"
+    echo -e " ${GREEN}26.${NC} $(t opt_26)"
     echo ""
     read -rp "${PROMPT_PREFIX} $(t selective_input) " raw
 
@@ -236,6 +249,7 @@ selective_install() {
             16) toggle_sysctl_hardening ;;
             21) setup_warp_native ;;
             24) setup_caddy_selfsteal ;;
+            26) setup_remnanode ;;
             25) setup_psiphon ;;
             *) warning "$(t selective_invalid): $item" ;;
         esac
@@ -430,56 +444,210 @@ EOF
     done
 }
 
-show_menu() {
-    local divider="────────────────────────────────────────────────────────────────────────────────"
+menu_divider() {
+    echo -e "${GRAY}────────────────────────────────────────────────────────────${NC}"
+}
 
+menu_header() {
+    local title="$1"
     clear
     print_logo
-    echo -e "${GRAY}${divider}${NC}"
+    menu_divider
+    echo -e "${BOLD}${title}${NC}"
+    echo ""
+}
+
+menu_container_state() {
+    local container="$1" state
+
+    if ! command -v docker >/dev/null 2>&1 || ! docker info >/dev/null 2>&1; then
+        printf 'unavailable'
+        return 0
+    fi
+
+    if ! state="$(docker inspect --format '{{.State.Status}}' "$container" 2>/dev/null)"; then
+        printf 'missing'
+        return 0
+    fi
+
+    if [[ "$state" == "running" ]]; then
+        printf 'running'
+    else
+        printf 'stopped'
+    fi
+}
+
+print_service_status() {
+    local label_key="$1" container="$2" state color
+    state="$(menu_container_state "$container")"
+
+    case "$state" in
+        running) color="$GREEN" ;;
+        stopped) color="$YELLOW" ;;
+        *) color="$GRAY" ;;
+    esac
+
+    printf "  %b%-16s%b %b%s%b\n" \
+        "$MAGENTA" "$(t "$label_key")" "$NC" \
+        "$color" "$(t "status_${state}")" "$NC"
+}
+
+show_menu() {
+    menu_header "$(t main_menu_title)"
+
+    echo -e "${MAGENTA}$(t menu_status_title)${NC}"
+    print_service_status status_remnanode_label remnanode
+    print_service_status status_caddy_label caddy
+    print_service_status status_nginx_label nginx
+    echo ""
+    menu_divider
+
+    echo -e "${MAGENTA}$(t category_services)${NC}"
+    echo -e " ${GREEN}1.${NC} $(t opt_server_settings) ${GRAY}→${NC}"
+    echo -e " ${GREEN}2.${NC} $(t opt_remnanode_settings) ${GRAY}→${NC}"
+    echo -e " ${GREEN}3.${NC} $(t opt_selfsteal_settings) ${GRAY}→${NC}"
     echo ""
     echo -e "${MAGENTA}$(t category_quick)${NC}"
-    echo -e " ${GREEN}1.${NC} $(t opt_1)"
-    echo -e " ${GREEN}2.${NC} $(t opt_2)"
+    echo -e " ${GREEN}4.${NC} $(t opt_1)"
+    echo -e " ${GREEN}5.${NC} $(t opt_2)"
     echo ""
-    echo -e "${MAGENTA}$(t category_system)${NC}"
-    echo -e " ${GREEN}3.${NC} $(t opt_3)"
-    echo -e " ${GREEN}4.${NC} $(t opt_4)"
-    echo -e " ${GREEN}5.${NC} $(t opt_5)"
-    echo -e " ${GREEN}6.${NC} $(menu_option_text 6)"
-    echo -e " ${GREEN}7.${NC} $(menu_option_text 7)"
-    echo ""
-    echo -e "${MAGENTA}$(t category_security)${NC}"
-    echo -e " ${GREEN}8.${NC} $(t opt_8)"
-    echo -e " ${GREEN}9.${NC} $(menu_option_text 9)"
-    echo -e " ${GREEN}10.${NC} $(menu_option_text 10)"
-    echo -e " ${GREEN}23.${NC} $(menu_option_text 23)"
-    echo -e " ${GREEN}24.${NC} $(t opt_24)"
-    echo ""
-    echo -e "${MAGENTA}$(t category_dev)${NC}"
-    echo -e " ${GREEN}11.${NC} $(t opt_11)"
-    echo -e " ${GREEN}12.${NC} $(t opt_12)"
-    echo -e " ${GREEN}13.${NC} $(t opt_13)"
-    echo -e " ${GREEN}14.${NC} $(t opt_14)"
-    echo ""
-    echo -e "${MAGENTA}$(t category_performance)${NC}"
-    echo -e " ${GREEN}15.${NC} $(t opt_15)"
-    echo -e " ${GREEN}16.${NC} $(menu_option_text 16)"
-    echo ""
-    echo -e "${MAGENTA}$(t category_misc)${NC}"
-    echo -e " ${GREEN}19.${NC} $(t opt_19)"
-    echo -e " ${GREEN}20.${NC} $(t opt_20)"
-    echo -e " ${GREEN}21.${NC} $(menu_option_text 21)"
-    echo -e " ${GREEN}22.${NC} $(t opt_22)"
-    echo -e " ${GREEN}25.${NC} $(t opt_25)"
-    echo ""
-    echo -e "${GRAY}${divider}${NC}"
+    menu_divider
     echo -e " ${RED}0.${NC} $(t opt_0)"
     echo -e " - $(t quick_launch): ${RED}${BOLD}karenet-setup${NC}"
     echo ""
 }
 
-# Основной цикл программы (без изменений)
+show_server_settings_menu() {
+    menu_header "$(t server_menu_title)"
+
+    echo -e "${MAGENTA}$(t category_system)${NC}"
+    echo -e " ${GREEN}1.${NC} $(t opt_3)"
+    echo -e " ${GREEN}2.${NC} $(t opt_4)"
+    echo -e " ${GREEN}3.${NC} $(t opt_5)"
+    echo -e " ${GREEN}4.${NC} $(menu_option_text 6)"
+    echo -e " ${GREEN}5.${NC} $(menu_option_text 7)"
+    echo -e "${MAGENTA}$(t category_security)${NC}"
+    echo -e " ${GREEN}6.${NC} $(t opt_8)"
+    echo -e " ${GREEN}7.${NC} $(menu_option_text 9)"
+    echo -e " ${GREEN}8.${NC} $(menu_option_text 10)"
+    echo -e " ${GREEN}9.${NC} $(menu_option_text 23)"
+    echo -e "${MAGENTA}$(t category_dev)${NC}"
+    echo -e " ${GREEN}10.${NC} $(t opt_11)"
+    echo -e " ${GREEN}11.${NC} $(t opt_12)"
+    echo -e " ${GREEN}12.${NC} $(t opt_13)"
+    echo -e " ${GREEN}13.${NC} $(t opt_14)"
+    echo -e "${MAGENTA}$(t category_performance)${NC}"
+    echo -e " ${GREEN}14.${NC} $(t opt_15)"
+    echo -e " ${GREEN}15.${NC} $(menu_option_text 16)"
+    echo -e "${MAGENTA}$(t category_misc)${NC}"
+    echo -e " ${GREEN}16.${NC} $(menu_option_text 21)"
+    echo -e " ${GREEN}17.${NC} $(t opt_25)"
+    echo -e " ${GREEN}18.${NC} $(t opt_19)"
+    echo -e " ${GREEN}19.${NC} $(t opt_22)"
+    echo -e " ${GREEN}20.${NC} $(t opt_20)"
+    echo ""
+    menu_divider
+    echo -e " ${RED}0.${NC} $(t opt_back)"
+    echo ""
+}
+
+server_settings_menu() {
+    local choice
+    while true; do
+        show_server_settings_menu
+        read -rp "${PROMPT_PREFIX} $(t choose_server_item) " choice
+        echo ""
+
+        case "$choice" in
+            1) add_user ;;
+            2) update_system ;;
+            3) install_packages ;;
+            4) toggle_swap ;;
+            5) toggle_ulimits ;;
+            6) setup_ssh ;;
+            7) toggle_firewall ;;
+            8) setup_trafficguard ;;
+            9) setup_ds_guard ;;
+            10) setup_zsh ;;
+            11) setup_nodejs ;;
+            12) setup_uv ;;
+            13) setup_docker ;;
+            14) setup_xanmod ;;
+            15) toggle_sysctl_hardening ;;
+            16) setup_warp_native ;;
+            17) setup_psiphon ;;
+            18) check_script_updates ;;
+            19) self_update_script ;;
+            20) uninstall_script ;;
+            0) return ;;
+            *) error "$(t invalid_choice)"; read -rp "${PROMPT_PREFIX} $(t press_enter)"; continue ;;
+        esac
+
+        if [[ "$choice" != "0" ]]; then
+            read -rp "${PROMPT_PREFIX} $(t press_enter)"
+        fi
+    done
+}
+
+show_remnanode_menu() {
+    menu_header "$(t remnanode_menu_title)"
+    echo -e "${MAGENTA}$(t menu_status_title)${NC}"
+    print_service_status status_remnanode_label remnanode
+    echo ""
+    menu_divider
+    echo -e "${MAGENTA}$(t category_remnanode)${NC}"
+    echo -e " ${GREEN}1.${NC} $(t opt_26)"
+    echo ""
+    menu_divider
+    echo -e " ${RED}0.${NC} $(t opt_back)"
+    echo ""
+}
+
+remnanode_settings_menu() {
+    local choice
+    while true; do
+        show_remnanode_menu
+        read -rp "${PROMPT_PREFIX} $(t choose_remnanode_item) " choice
+        echo ""
+        case "$choice" in
+            1) setup_remnanode; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            0) return ;;
+            *) error "$(t invalid_choice)"; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+        esac
+    done
+}
+
+show_selfsteal_menu() {
+    menu_header "$(t selfsteal_menu_title)"
+    echo -e "${MAGENTA}$(t menu_status_title)${NC}"
+    print_service_status status_caddy_label caddy
+    print_service_status status_nginx_label nginx
+    echo ""
+    menu_divider
+    echo -e "${MAGENTA}$(t category_selfsteal)${NC}"
+    echo -e " ${GREEN}1.${NC} $(t opt_24)"
+    echo ""
+    menu_divider
+    echo -e " ${RED}0.${NC} $(t opt_back)"
+    echo ""
+}
+
+selfsteal_settings_menu() {
+    local choice
+    while true; do
+        show_selfsteal_menu
+        read -rp "${PROMPT_PREFIX} $(t choose_selfsteal_item) " choice
+        echo ""
+        case "$choice" in
+            1) setup_caddy_selfsteal; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            0) return ;;
+            *) error "$(t invalid_choice)"; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+        esac
+    done
+}
+
 main() {
+    local choice
     set_language
     log "=========================================="
     log "$(t startup_title)"
@@ -488,37 +656,18 @@ main() {
         show_menu
         read -rp "${PROMPT_PREFIX} $(t choose_item) " choice
         echo ""
-        case $choice in
-            1) install_all ;;
-            2) selective_install ;;
-            3) add_user ;;
-            4) update_system ;;
-            5) install_packages ;;
-            6) toggle_swap ;;
-            7) toggle_ulimits ;;
-            8) setup_ssh ;;
-            9) toggle_firewall ;;
-            10) setup_trafficguard ;;
-            23) setup_ds_guard ;;
-            11) setup_zsh ;;
-            12) setup_nodejs ;;
-            13) setup_uv ;;
-            14) setup_docker ;;
-            15) setup_xanmod ;;
-            16) toggle_sysctl_hardening ;;
-            19) check_script_updates ;;
-            20) uninstall_script ;;
-            21) setup_warp_native ;;
-            24) setup_caddy_selfsteal ;;
-            25) setup_psiphon ;;
-            22) self_update_script ;;
+        case "$choice" in
+            1) server_settings_menu ;;
+            2) remnanode_settings_menu ;;
+            3) selfsteal_settings_menu ;;
+            4) install_all; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            5) selective_install; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
             0) log "$(t exit_log)"; exit 0 ;;
-            *) error "$(t invalid_choice)" ;;
+            *) error "$(t invalid_choice)"; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
         esac
-        echo ""
-        read -rp "${PROMPT_PREFIX} $(t press_enter)"
     done
 }
+
 
 # Запуск основной функции
 main

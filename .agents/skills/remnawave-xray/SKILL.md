@@ -7,6 +7,7 @@ description: Use when working with a Remnawave VPN stack — designing, generati
 
 Экспертный справочник по узкому VPN-стеку. Это кросс-tool точка входа стандарта agentskills.io
 (Codex / Gemini CLI / GitHub Copilot / Zed) — тонкий роутер; полный контент лежит в `skills/remnawave-xray/`.
+Материалы upstream в этом роутере и `skills/remnawave-xray/` распространяются отдельно по AGPL-3.0; см. `../../../skills/remnawave-xray/LICENSE`.
 
 ## Куда смотреть — сверяйся с файлами, не отвечай по памяти
 
@@ -34,4 +35,4 @@ description: Use when working with a Remnawave VPN stack — designing, generati
 - `network: "raw"` (не `tcp`); официальные имена `target`/`password` (не dest/publicKey).
 - Ключи: privateKey/publicKey 32 байта; `pubkey = xray x25519 -i "<privateKey>"`.
 
-Версии (сверять перед деплоем): Remnawave **2.8.0** · Xray-core **v26.6.27** · Caddy **2.11.4** · mihomo **1.19.27**.
+Версии (сверять перед деплоем): Remnawave panel **3.2.3** · node **3.1.1** · Xray-core **v26.7.28** · Caddy **2.11.4** · mihomo **1.19.29**.

@@ -12,3 +12,7 @@ export NC='\033[0m' # No Color
 # Путь к скриптам
 export SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export MODULES_DIR="$SCRIPTS_DIR/modules"
+export REMNANODE_DIR="/opt/remnanode"
+export REMNANODE_NODE_PORT="30100"
+export REMNANODE_PANEL_IP_FILE="$REMNANODE_DIR/panel-ip"
+export REMNANODE_PANEL_RULE_FILE="$REMNANODE_DIR/panel-access"

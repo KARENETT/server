@@ -1,0 +1,4 @@
+Source: https://github.com/Case211/skill-remnawave-xray
+Imported from main at commit 94ef800e6719294e729081cbd9b3dd2ef75ebd76.
+
+The canonical skill subtree (`skills/remnawave-xray/`) and its loader router (`.agents/skills/remnawave-xray/SKILL.md`) are upstream content licensed under AGPL-3.0 (see `skills/remnawave-xray/LICENSE`). This separate license scope does not change the license of the surrounding repository.

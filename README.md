@@ -21,6 +21,7 @@
 - базовый firewall и защитные сервисы;
 - сетевые оптимизации (BBR/sysctl/TFO);
 - установка dev-инструментов и runtime-компонентов;
+- развёртывание RemnaNode и self-steal Caddy/Nginx через Docker Compose;
 - единый интерактивный запуск через `setup.sh`.
 
 ---
@@ -81,19 +82,29 @@ sudo karenet-setup
 | Категория | Что настраивается |
 |:--|:--|
 | System | Базовые системные пакеты, user/system tweaks |
-| Network | sysctl hardening, BBR, network tuning, Caddy self-steal, Psiphon |
-| Security | SSH, firewall, fail2ban, trafficguard, блокировка торрентов через ds-guard |
+| Network | sysctl hardening, BBR, network tuning, Caddy/Nginx self-steal, Psiphon |
+| Security | SSH, firewall (в том числе ограничение порта RemnaNode IP панели), fail2ban, trafficguard, блокировка торрентов через ds-guard |
 | Runtime | Docker, Node.js, uv, ZSH, XanMod, WARP Native |
+
+## 🔐 RemnaNode и self-steal
+
+Главное меню разделяет настройки: `1` — сервер, `2` — RemnaNode, `3` — self-steal, `4` — полная настройка сервера, `5` — выборочная установка. Путь к установке RemnaNode: `2 → 1`; self-steal: `3 → 1`. Выборочная установка (`5`) использует идентификаторы модулей: RemnaNode `26`, self-steal `24`.
+
+- RemnaNode создаётся в `/opt/remnanode/docker-compose.yml`; скрипт запрашивает IP панели, TCP-порт ноды (по умолчанию `30100`) и скрытый `SECRET_KEY`. UFW разрешает порт ноды только с IP панели; правило сохраняется для восстановления после сброса UFW. Ключ хранится в `/opt/remnanode/.env` с правами `600`. Требуется `/opt/remnawave/xray/share/zapret.dat`.
+- Self-steal создаёт Caddy/Nginx Compose-стек в `/opt/remnanode/web` и запрашивает домены `raw` и `xhttp`. DNS должен вести прямо на сервер; TCP/80 нужен для ACME. Nginx направляет raw на Xray `127.0.0.1:10443`, XHTTP — на `127.0.0.1:10444`, используя PROXY protocol. Caddy обслуживает оба домена на `127.0.0.1:9443` и перенаправляет HTTP для обоих. Оба Xray inbound должны слушать соответствующие порты и принимать PROXY protocol.
+- UFW настраивается в меню сервера (`1 → 7`): входящие соединения по умолчанию запрещены; разрешаются выбранный TCP-порт SSH, `80/tcp`, `443/tcp` и, по желанию, `ufw allow from <IP_ПАНЕЛИ> to any port <ПОРТ> proto tcp comment 'remnanode: только панель'`. IP панели и порт вводятся пользователем.
+- При установке self-steal скрипт попросит остановить системный Caddy и контейнеры, занимающие порты `80` или `443`.
 
 ---
 
 ## 📁 Структура репозитория
 
-- `setup.sh` - основной интерактивный установщик
-- `scripts/modules/` - независимые модули настройки
-- `scripts/assets/selfsteal/index.html` - страница-заглушка для Caddy self-steal
-- `scripts/utils.sh` - общие функции и helper-утилиты
-- `translation/en.sh`, `translation/ru.sh` - локализация интерфейса
+- `setup.sh` — интерактивный установщик с отдельными меню сервера, RemnaNode и self-steal
+- `scripts/modules/` — независимые модули настройки
+- `scripts/assets/selfsteal/index.html` — статическая витрина VEILSTORE для Caddy self-steal
+- `scripts/utils.sh` — общие функции и helper-утилиты
+- `translation/en.sh`, `translation/ru.sh` — локализация интерфейса
+- `skills/remnawave-xray/` и `.agents/skills/remnawave-xray/SKILL.md` — upstream-справочник Remnawave/Xray и его роутер; оба распространяются отдельно по AGPL-3.0
 
 ---
 
@@ -112,4 +123,4 @@ sudo bash setup.sh
 
 ## 📄 Лицензия
 
-MIT, см. файл `LICENSE`.
+MIT для кода проекта, см. файл `LICENSE`. Вендоренный skill и его роутер (`skills/remnawave-xray/`, `.agents/skills/remnawave-xray/SKILL.md`) лицензированы отдельно по AGPL-3.0; см. `skills/remnawave-xray/LICENSE` и `UPSTREAM.txt`.

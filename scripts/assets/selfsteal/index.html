@@ -3,225 +3,435 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VEILSTORE</title>
-
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="VEILSTORE — considered clothing, footwear and accessories for everyday wear." />
+    <title>VEILSTORE — Everyday, reconsidered</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap"
-      rel="stylesheet"
-    />
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter Tight', 'sans-serif'] },
+            colors: { paper: '#000000', ink: '#000000', concrete: '#111111' },
+            letterSpacing: { tightest: '-.065em' }
+          }
+        }
+      };
+    </script>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      html,
-      body {
-        width: 100%;
-        min-height: 100%;
-        background: #000;
-        color: #fff;
-        font-family: "Geist", sans-serif;
-      }
-
-      body {
-        min-height: 100vh;
-        overflow: hidden;
-      }
-
-      .page {
-        position: relative;
-        width: 100%;
-        min-height: 100vh;
-        padding: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .header {
-        position: absolute;
-        top: 32px;
-        left: 32px;
-        right: 32px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 12px;
-        font-weight: 500;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        opacity: 0.72;
-      }
-
-      .header span {
-        white-space: nowrap;
-      }
-
-      .center {
-        text-align: center;
-      }
-
-      .label {
-        margin-bottom: 22px;
-        font-size: clamp(11px, 1vw, 13px);
-        font-weight: 500;
-        letter-spacing: 0.28em;
-        text-transform: uppercase;
-        opacity: 0.58;
-      }
-
-      .brand {
-        font-size: clamp(56px, 12vw, 176px);
-        font-weight: 600;
-        letter-spacing: -0.075em;
-        line-height: 0.86;
-        text-transform: uppercase;
-      }
-
-      .subtitle {
-        margin-top: 26px;
-        font-size: clamp(12px, 1.2vw, 16px);
-        font-weight: 400;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        opacity: 0.68;
-      }
-
-      .footer {
-        position: absolute;
-        left: 32px;
-        right: 32px;
-        bottom: 32px;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        gap: 24px;
-      }
-
-      .coming-soon {
-        font-size: clamp(13px, 1.4vw, 18px);
-        font-weight: 500;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        opacity: 0.86;
-      }
-
-      .details {
-        max-width: 360px;
-        text-align: right;
-        font-size: clamp(11px, 1vw, 13px);
-        line-height: 1.6;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        opacity: 0.52;
-      }
-
-      .line {
-        position: absolute;
-        background: #fff;
-        opacity: 0.12;
-      }
-
-      .line-top {
-        top: 82px;
-        left: 32px;
-        right: 32px;
-        height: 1px;
-      }
-
-      .line-bottom {
-        bottom: 82px;
-        left: 32px;
-        right: 32px;
-        height: 1px;
-      }
-
-      .grain {
-        pointer-events: none;
-        position: fixed;
-        inset: 0;
-        opacity: 0.055;
-        background-image:
-          linear-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.18) 1px, transparent 1px);
-        background-size: 42px 42px;
-      }
-
-      @media (max-width: 700px) {
-        .page {
-          padding: 22px;
-        }
-
-        .header {
-          top: 22px;
-          left: 22px;
-          right: 22px;
-          font-size: 10px;
-        }
-
-        .header span:nth-child(2) {
-          display: none;
-        }
-
-        .footer {
-          left: 22px;
-          right: 22px;
-          bottom: 24px;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-        }
-
-        .details {
-          text-align: center;
-          max-width: 280px;
-        }
-
-        .line-top {
-          top: 70px;
-          left: 22px;
-          right: 22px;
-        }
-
-        .line-bottom {
-          bottom: 118px;
-          left: 22px;
-          right: 22px;
-        }
-      }
+      :root { color-scheme: dark; }
+      html { scroll-behavior: smooth; }
+      body { font-family: 'Inter Tight', sans-serif; }
+      ::selection { background: #fff; color: #000; }
+      a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+      .hero-image, .department-image, .product-image { filter: grayscale(100%); }
+      .hero-image { object-position: center 35%; }
+      .department-image, .product-image { transition: transform .55s cubic-bezier(.2,.7,.2,1); }
+      .department-card:hover .department-image, .product-card:hover .product-image { transform: scale(1.04); }
+      .filter-control { display: inline-flex; height: 40px; flex: none; align-items: center; gap: .45rem; border: 1px solid rgb(255 255 255 / 18%); border-radius: 9999px; background: #111; padding: 0 .8rem; }
+      .filter-control select { max-width: 125px; appearance: none; cursor: pointer; background: transparent; color: #fff; font-size: 11px; font-weight: 500; outline: none; }
+      .filter-control option { background: #000; color: #fff; }
+      .drawer-backdrop { background: rgb(0 0 0 / 42%); backdrop-filter: blur(3px); }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { scrollbar-width: none; }
+      body.bg-paper { background-color: #000 !important; color: #fff !important; }
+      header { background-color: rgb(0 0 0 / 96%) !important; border-color: rgb(255 255 255 / 12%) !important; }
+      #mobile-menu { border-color: rgb(255 255 255 / 12%); }
+      #cart-drawer { background-color: #000 !important; color: #fff !important; }
+      #cart-count, #checkout-button { background-color: #fff !important; color: #000 !important; }
+      #cart-close:hover { background-color: #fff; color: #000; }
+      .mobile-add { color: #000 !important; }
+      #home-view [class~="bg-white"][class~="text-black"] { color: #000 !important; }
+      #home-view [class~="bg-white"][class~="text-black"]:hover { color: #fff !important; }
+      body [class~="text-black"], body [class~="text-ink"] { color: #fff !important; }
+      body [class~="text-black/35"] { color: rgb(255 255 255 / 35%) !important; }
+      body [class~="text-black/40"] { color: rgb(255 255 255 / 40%) !important; }
+      body [class~="text-black/45"] { color: rgb(255 255 255 / 45%) !important; }
+      body [class~="text-black/50"] { color: rgb(255 255 255 / 50%) !important; }
+      body [class~="text-black/55"] { color: rgb(255 255 255 / 55%) !important; }
+      body [class~="text-black/65"] { color: rgb(255 255 255 / 65%) !important; }
+      body [class~="text-black/70"] { color: rgb(255 255 255 / 70%) !important; }
+      body [class~="hover:text-black"]:hover { color: #fff !important; }
+      body [class~="placeholder:text-black/40"]::placeholder { color: rgb(255 255 255 / 40%) !important; }
+      body [class~="border-black"] { border-color: #fff !important; }
+      body [class~="border-black/10"] { border-color: rgb(255 255 255 / 10%) !important; }
+      body [class~="border-black/15"] { border-color: rgb(255 255 255 / 15%) !important; }
+      body [class~="border-black/20"] { border-color: rgb(255 255 255 / 20%) !important; }
+      body [class~="text-neutral-500"] { color: rgb(255 255 255 / 55%) !important; }
     </style>
   </head>
-
-  <body>
-    <div class="grain"></div>
-
-    <div class="page">
-      <div class="line line-top"></div>
-      <div class="line line-bottom"></div>
-
-      <header class="header">
-        <span>VEILSTORE</span>
-        <span>CONTEMPORARY CLOTHING</span>
-        <span>EST. 2027</span>
-      </header>
-
-      <main class="center">
-        <div class="label">NEW COLLECTION</div>
-        <h1 class="brand">VEILSTORE</h1>
-        <div class="subtitle">MINIMAL WARDROBE / MODERN SILHOUETTES</div>
-      </main>
-
-      <footer class="footer">
-        <div class="coming-soon">OPENING SOON IN 2027</div>
-        <div class="details">
-          A new fashion space for clean cuts, quiet luxury, and everyday essentials.
-        </div>
-      </footer>
+  <body class="bg-paper text-ink antialiased">
+    <div class="bg-ink px-4 py-2.5 text-center text-[10px] font-medium uppercase tracking-[.16em] text-white sm:text-xs">
+      New season, new everyday <span class="mx-2 text-white/40">/</span> Complimentary shipping over $100 <i data-lucide="sparkles" class="ml-1 inline-block h-3 w-3 align-[-2px]"></i>
     </div>
+    <div class="border-b border-black/10 px-5 py-2 text-[9px] font-medium uppercase tracking-[.14em] text-black/45 sm:px-8 lg:px-12">
+      <div class="mx-auto flex max-w-[1600px] justify-between"><span class="hidden sm:inline">Considered everyday goods · Online store</span><span class="sm:hidden">Everyday goods</span><a href="mailto:support@veil.watch" class="transition hover:text-black">Support@veil.watch</a></div>
+    </div>
+
+    <header class="sticky top-0 z-30 border-b border-black/10 bg-white/95 backdrop-blur-md">
+      <div class="relative mx-auto flex h-[72px] max-w-[1600px] items-center justify-between px-5 sm:px-8 lg:px-12">
+        <nav class="hidden items-center gap-6 text-[11px] font-medium uppercase tracking-[.1em] lg:flex" aria-label="Main navigation">
+          <a href="#catalog" class="transition hover:opacity-50">Clothing</a>
+          <a href="#catalog?category=Footwear" class="transition hover:opacity-50">Footwear</a>
+          <a href="#catalog?category=Accessories" class="transition hover:opacity-50">Accessories</a>
+          <a href="#catalog" class="transition hover:opacity-50">New in</a>
+        </nav>
+        <a href="#home" class="absolute left-1/2 -translate-x-1/2 text-[25px] font-extrabold tracking-[-.09em]" aria-label="VEILSTORE home">VEILSTORE<span>.</span></a>
+        <div class="ml-auto flex items-center gap-1 sm:gap-3">
+          <a href="#catalog?focus=search" class="grid h-10 w-10 place-items-center transition hover:bg-concrete" aria-label="Search the collection"><i data-lucide="search" class="h-4 w-4"></i></a>
+          <button id="cart-open" class="flex h-10 items-center gap-2 rounded-full border border-black/15 px-3 text-xs font-medium transition hover:bg-ink hover:text-white sm:px-4" aria-label="Open shopping bag">
+            <i data-lucide="shopping-bag" class="h-4 w-4"></i><span class="hidden sm:inline">Bag</span><span id="cart-count" class="grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-[10px] text-white">0</span>
+          </button>
+          <button id="mobile-menu-open" class="grid h-9 w-9 place-items-center lg:hidden" aria-label="Open menu" aria-expanded="false"><i data-lucide="menu" class="h-5 w-5"></i></button>
+        </div>
+      </div>
+      <nav id="mobile-menu" class="hidden border-t border-black/10 px-5 py-4 lg:hidden" aria-label="Mobile navigation">
+        <div class="flex flex-wrap gap-x-6 gap-y-3 text-sm"><a href="#catalog">Clothing</a><a href="#catalog?category=Footwear">Footwear</a><a href="#catalog?category=Accessories">Accessories</a><a href="#catalog">New in</a><a href="#about">Our story</a><a href="mailto:support@veil.watch">Contact</a></div>
+      </nav>
+    </header>
+
+    <div id="home-view">
+      <main id="top">
+        <section class="relative grid min-h-[590px] place-items-center overflow-hidden bg-neutral-800 sm:min-h-[680px] lg:min-h-[min(78vh,900px)]">
+          <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=2200&q=90" alt="A quiet city look from the VEILSTORE collection" class="hero-image absolute inset-0 h-full w-full object-cover object-center" fetchpriority="high" />
+          <div class="absolute inset-0 bg-black/35"></div>
+          <div class="relative z-10 mx-auto max-w-4xl px-5 py-24 text-center text-white">
+            <p class="mb-5 text-[10px] font-semibold uppercase tracking-[.22em] sm:text-xs">VEILSTORE · Collection 01</p>
+            <h1 class="text-[clamp(3.6rem,10vw,8.8rem)] font-medium leading-[.83] tracking-tightest">Everyday,<br /><span class="font-normal italic">reconsidered.</span></h1>
+            <p class="mx-auto mt-7 max-w-sm text-xs leading-relaxed text-white/75 sm:text-sm">Clothing, footwear and objects for the days that make up your life.</p>
+            <a href="#catalog" class="group mt-8 inline-flex items-center gap-4 rounded-full bg-white px-6 py-4 text-[10px] font-semibold uppercase tracking-[.1em] text-black transition hover:bg-black hover:text-white">Explore the collection <i data-lucide="arrow-up-right" class="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"></i></a>
+          </div>
+          <div class="absolute bottom-6 left-5 right-5 flex justify-between text-[9px] font-medium uppercase tracking-[.15em] text-white/65 sm:bottom-8 sm:left-8 sm:right-8 lg:left-12 lg:right-12"><span>Designed for everyday</span><span>01 — 24</span></div>
+        </section>
+
+        <section class="mx-auto max-w-[1600px] px-5 py-12 sm:px-8 sm:py-16 lg:px-12">
+          <div class="mb-6 flex items-end justify-between border-b border-black/15 pb-4"><div><p class="mb-1 text-[9px] font-semibold uppercase tracking-[.18em] text-black/45">Find your form</p><h2 class="text-3xl font-medium tracking-[-.06em] sm:text-4xl">Shop by category</h2></div><a href="#catalog" class="hidden items-center gap-2 text-[10px] font-medium uppercase tracking-[.1em] sm:inline-flex">All categories <i data-lucide="arrow-up-right" class="h-4 w-4"></i></a></div>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <a href="#catalog?category=Tees" class="department-card group relative min-h-[260px] overflow-hidden bg-neutral-200 sm:min-h-[330px]"><img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85" alt="A foundational everyday tee" class="department-image h-full w-full object-cover" loading="lazy" /><div class="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent"></div><div class="absolute bottom-5 left-5 flex w-[calc(100%-2.5rem)] items-end justify-between text-white"><span><span class="mb-1 block text-[9px] uppercase tracking-[.16em] text-white/70">01 / The foundation</span><span class="text-2xl font-medium">Clothing</span></span><i data-lucide="arrow-up-right" class="h-5 w-5 transition group-hover:-translate-y-1 group-hover:translate-x-1"></i></div></a>
+            <a href="#catalog?category=Footwear" class="department-card group relative min-h-[260px] overflow-hidden bg-neutral-200 sm:min-h-[330px]"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85" alt="Minimal everyday sneakers" class="department-image h-full w-full object-cover" loading="lazy" /><div class="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent"></div><div class="absolute bottom-5 left-5 flex w-[calc(100%-2.5rem)] items-end justify-between text-white"><span><span class="mb-1 block text-[9px] uppercase tracking-[.16em] text-white/70">02 / Grounded in motion</span><span class="text-2xl font-medium">Footwear</span></span><i data-lucide="arrow-up-right" class="h-5 w-5 transition group-hover:-translate-y-1 group-hover:translate-x-1"></i></div></a>
+            <a href="#catalog?category=Accessories" class="department-card group relative min-h-[260px] overflow-hidden bg-neutral-200 sm:min-h-[330px]"><img src="https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=900&q=85" alt="An everyday canvas carryall" class="department-image h-full w-full object-cover" loading="lazy" /><div class="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent"></div><div class="absolute bottom-5 left-5 flex w-[calc(100%-2.5rem)] items-end justify-between text-white"><span><span class="mb-1 block text-[9px] uppercase tracking-[.16em] text-white/70">03 / Small details</span><span class="text-2xl font-medium">Accessories</span></span><i data-lucide="arrow-up-right" class="h-5 w-5 transition group-hover:-translate-y-1 group-hover:translate-x-1"></i></div></a>
+          </div>
+        </section>
+
+        <section class="bg-black">
+          <div class="mx-auto max-w-[1600px] px-5 py-12 sm:px-8 sm:py-16 lg:px-12">
+            <div class="mb-6 flex flex-col justify-between gap-4 border-b border-black/15 pb-4 sm:flex-row sm:items-end"><div><p class="mb-1 text-[9px] font-semibold uppercase tracking-[.18em] text-black/45">Just landed</p><h2 class="text-3xl font-medium tracking-[-.06em] sm:text-4xl">New arrivals</h2></div><a href="#catalog" class="group inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[.1em]">Shop all 24 pieces <i data-lucide="arrow-right" class="h-4 w-4 transition group-hover:translate-x-1"></i></a></div>
+            <p id="home-product-total" class="mb-4 text-[10px] text-black/45"></p>
+            <div id="home-product-grid" class="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 sm:gap-y-10 lg:grid-cols-4"></div>
+            <p id="home-empty-state" class="hidden py-20 text-center text-sm text-black/50">No pieces found.</p>
+          </div>
+        </section>
+
+        <section id="about" class="relative scroll-mt-24 overflow-hidden bg-ink text-white">
+          <div class="absolute -right-20 top-[-35%] h-[150%] w-[55%] rounded-full border border-white/10"></div>
+          <div class="relative mx-auto flex max-w-[1600px] flex-col gap-8 px-5 py-14 sm:px-8 sm:py-20 lg:flex-row lg:items-end lg:justify-between lg:px-12 lg:py-24">
+            <div><p class="mb-4 text-[9px] font-semibold uppercase tracking-[.2em] text-white/45">Less, with intention</p><h2 class="max-w-[760px] text-5xl font-medium leading-[.9] tracking-[-.07em] sm:text-7xl">Good things<br />get worn <span class="italic font-normal">often.</span></h2></div>
+            <div class="max-w-sm"><p class="text-sm leading-relaxed text-white/60">VEILSTORE is a wardrobe for your own pace. Clean silhouettes, considered details and nothing extra — made to earn their place, day after day.</p><a href="mailto:support@veil.watch" class="group mt-6 inline-flex items-center gap-2 border-b border-white/70 pb-2 text-xs font-medium">Talk to our team <i data-lucide="arrow-up-right" class="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"></i></a></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="catalog-view" class="hidden">
+      <main id="catalog-main">
+        <section class="mx-auto max-w-[1600px] px-5 pb-16 pt-8 sm:px-8 sm:pt-12 lg:px-12 lg:pb-24">
+          <div class="mb-7 text-center sm:mb-9">
+            <div class="mb-3 flex items-center justify-center gap-2 text-[9px] font-medium uppercase tracking-[.15em] text-black/45"><a href="#home" class="transition hover:text-black">Home</a><i data-lucide="chevron-right" class="h-3 w-3"></i><span class="text-black">Shop</span></div>
+            <p class="mb-2 text-[9px] font-semibold uppercase tracking-[.2em] text-black/45">The VEILSTORE edit</p>
+            <h1 class="text-4xl font-medium tracking-[-.06em] sm:text-6xl">Clothing, footwear & more<span class="text-black/35">.</span></h1>
+            <p class="mx-auto mt-3 max-w-md text-xs leading-relaxed text-black/50">Everyday pieces, selected for their fit, feel and staying power.</p>
+          </div>
+
+          <div class="mb-5 flex flex-col gap-3 border-y border-black/10 py-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="no-scrollbar flex gap-2 overflow-x-auto pb-1 lg:pb-0" aria-label="Product filters">
+              <label class="filter-control"><i data-lucide="layout-grid" class="h-3.5 w-3.5 shrink-0 text-black/50"></i><select id="category-filter" aria-label="Filter by category"><option value="All">Category</option><option value="Tees">Tees</option><option value="Hoodies">Hoodies</option><option value="Trousers">Trousers</option><option value="Outerwear">Outerwear</option><option value="Footwear">Footwear</option><option value="Accessories">Accessories</option></select><i data-lucide="chevron-down" class="h-3 w-3 shrink-0 text-black/45"></i></label>
+              <label class="filter-control"><i data-lucide="tag" class="h-3.5 w-3.5 shrink-0 text-black/50"></i><select id="price-filter" aria-label="Filter by maximum price"><option value="0">Price</option><option value="50">Up to $50</option><option value="100">Up to $100</option><option value="150">Up to $150</option><option value="200">Up to $200</option></select><i data-lucide="chevron-down" class="h-3 w-3 shrink-0 text-black/45"></i></label>
+              <label class="filter-control"><i data-lucide="palette" class="h-3.5 w-3.5 shrink-0 text-black/50"></i><select id="color-filter" aria-label="Filter by color"><option value="all">Color</option><option value="black">Black</option><option value="white">White</option><option value="grey">Grey</option><option value="neutral">Neutrals</option></select><i data-lucide="chevron-down" class="h-3 w-3 shrink-0 text-black/45"></i></label>
+            </div>
+            <div class="flex items-center justify-between gap-4 lg:justify-end">
+              <label class="filter-control"><i data-lucide="arrow-down-wide-narrow" class="h-3.5 w-3.5 shrink-0 text-black/50"></i><select id="sort-select" aria-label="Sort products"><option value="featured">New arrivals</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="name">Name</option></select><i data-lucide="chevron-down" class="h-3 w-3 shrink-0 text-black/45"></i></label>
+              <label class="filter-control min-w-0 flex-1 sm:w-52 sm:flex-none"><i data-lucide="search" class="h-4 w-4 shrink-0 text-black/45"></i><input id="catalog-search" type="search" placeholder="Search pieces" class="w-full min-w-0 bg-transparent text-xs outline-none placeholder:text-black/40" aria-label="Search products" /></label>
+            </div>
+          </div>
+
+          <div class="mb-4 flex items-center justify-between text-[10px] text-black/45"><p id="catalog-product-total"></p><span class="uppercase tracking-[.1em]">VEILSTORE / 01</span></div>
+          <div id="catalog-product-grid" class="grid grid-cols-2 gap-x-2 gap-y-8 sm:gap-x-4 sm:gap-y-10 lg:grid-cols-4"></div>
+          <p id="catalog-empty-state" class="hidden py-24 text-center text-sm text-black/50">No pieces match those filters. Try another selection.</p>
+        </section>
+      </main>
+      <section class="border-t border-white/10 bg-black">
+        <div class="mx-auto flex max-w-[1600px] flex-col gap-5 px-5 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12"><div><p class="mb-1 text-[9px] font-semibold uppercase tracking-[.16em] text-black/45">Need a hand?</p><p class="text-sm font-medium">Our support team is here to help.</p></div><a href="mailto:support@veil.watch" class="inline-flex items-center gap-2 text-xs font-medium">support@veil.watch <i data-lucide="arrow-up-right" class="h-4 w-4"></i></a></div>
+      </section>
+    </div>
+
+    <footer id="footer" class="mx-auto flex max-w-[1600px] flex-col gap-5 px-5 py-8 text-[10px] text-black/50 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
+      <a href="#home" class="text-lg font-extrabold tracking-[-.09em] text-ink">VEILSTORE<span>.</span></a>
+      <p>Clothing and objects for everyday wear.</p>
+      <a href="mailto:support@veil.watch" class="inline-flex items-center gap-1 transition hover:text-ink">support@veil.watch <i data-lucide="arrow-up-right" class="h-3.5 w-3.5"></i></a>
+    </footer>
+
+    <div id="cart-layer" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+      <button id="cart-backdrop" class="drawer-backdrop absolute inset-0 w-full" aria-label="Close shopping bag"></button>
+      <aside id="cart-drawer" class="absolute right-0 top-0 flex h-full w-full max-w-[440px] translate-x-full flex-col bg-white px-5 py-6 shadow-2xl transition-transform duration-300 sm:px-8" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+        <div class="flex items-center justify-between border-b border-black/15 pb-5"><div><p class="mb-1 text-[10px] uppercase tracking-[.15em] text-black/45">VEILSTORE</p><h2 id="cart-title" class="text-2xl font-semibold tracking-tight">Your bag <span id="drawer-count" class="text-black/40">(0)</span></h2></div><button id="cart-close" class="grid h-10 w-10 place-items-center rounded-full border border-black/15 transition hover:bg-ink hover:text-white" aria-label="Close shopping bag"><i data-lucide="x" class="h-4 w-4"></i></button></div>
+        <div id="cart-items" class="no-scrollbar flex-1 overflow-y-auto"></div>
+        <div id="cart-summary" class="hidden border-t border-black/15 pt-5"><div class="mb-5 flex justify-between text-sm"><span class="text-black/55">Subtotal</span><span id="cart-total" class="font-semibold"></span></div><button id="checkout-button" class="w-full rounded-full bg-ink py-4 text-sm font-medium text-white transition hover:bg-neutral-700">Continue to checkout <i data-lucide="arrow-up-right" class="ml-1 inline-block h-4 w-4 align-[-3px]"></i></button><p class="mt-3 text-center text-[10px] text-black/45">Demo store · checkout coming soon</p></div>
+      </aside>
+    </div>
+    <div id="toast" class="pointer-events-none fixed bottom-6 left-1/2 z-[60] -translate-x-1/2 translate-y-3 rounded-full bg-ink px-5 py-3 text-xs font-medium text-white opacity-0 shadow-lg transition-all" role="status" aria-live="polite"></div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const products = [
+          { id: 1, name: 'Studio Heavy Tee', category: 'Tees', price: 48, color: 'Washed black', image: 'photo-1521572163474-6864f9cf17ab', badge: 'BESTSELLER', featured: true },
+          { id: 2, name: 'Everyday Boxy Tee', category: 'Tees', price: 42, color: 'Soft white', image: 'photo-1503342217505-b0a15ec3261c', badge: 'NEW', featured: true },
+          { id: 3, name: 'Archive Graphic Tee', category: 'Tees', price: 52, color: 'Vintage grey', image: 'photo-1523381210434-271e8be1f52b', featured: true },
+          { id: 4, name: 'Longline Cotton Tee', category: 'Tees', price: 46, color: 'Stone', image: 'photo-1489987707025-afc232f7ea0f' },
+          { id: 5, name: 'Form Pullover Hoodie', category: 'Hoodies', price: 108, color: 'Charcoal', image: 'photo-1556821840-3a63f95609a7', badge: 'BESTSELLER', featured: true },
+          { id: 6, name: 'Studio Zip Hoodie', category: 'Hoodies', price: 118, color: 'Black', image: 'photo-1578681994506-b8f463449011', featured: true },
+          { id: 7, name: 'Core Fleece Hoodie', category: 'Hoodies', price: 98, color: 'Oat', image: 'photo-1515886657613-9f3515b0c78f' },
+          { id: 8, name: 'Heavyweight Crewneck', category: 'Hoodies', price: 92, color: 'Heather grey', image: 'photo-1483985988355-763728e1935b' },
+          { id: 9, name: 'Wide Leg Trouser', category: 'Trousers', price: 120, color: 'Black', image: 'photo-1515886657613-9f3515b0c78f', featured: true },
+          { id: 10, name: 'Utility Cargo Pant', category: 'Trousers', price: 138, color: 'Olive', image: 'photo-1475180098004-ca77a66827be', featured: true },
+          { id: 11, name: 'Relaxed Chino', category: 'Trousers', price: 112, color: 'Sand', image: 'photo-1490481651871-ab68de25d43d' },
+          { id: 12, name: 'Mono Overshirt', category: 'Outerwear', price: 145, color: 'Ink', image: 'photo-1529139574466-a303027c1d8b', badge: 'NEW', featured: true },
+          { id: 13, name: 'City Shell Jacket', category: 'Outerwear', price: 188, color: 'Black', image: 'photo-1598033129183-c4f50c736f10', featured: true },
+          { id: 14, name: 'Studio Denim Jacket', category: 'Outerwear', price: 168, color: 'Washed denim', image: 'photo-1543076447-215ad9ba6923' },
+          { id: 15, name: 'Cotton Coach Jacket', category: 'Outerwear', price: 158, color: 'Graphite', image: 'photo-1512436991641-6745cdb1723f' },
+          { id: 16, name: 'Canvas Shopper', category: 'Accessories', price: 32, color: 'Natural', image: 'photo-1590874103328-eac38a683ce7' },
+          { id: 17, name: 'Ribbed Beanie', category: 'Accessories', price: 36, color: 'Black', image: 'photo-1490481651871-ab68de25d43d' },
+          { id: 18, name: 'Everyday Cap', category: 'Accessories', price: 34, color: 'Stone', image: 'photo-1512436991641-6745cdb1723f' },
+          { id: 19, name: 'Leather Belt', category: 'Accessories', price: 58, color: 'Black', image: 'photo-1544441893-675973e31985' },
+          { id: 20, name: 'Crew Socks · 2 Pack', category: 'Accessories', price: 24, color: 'White', image: 'photo-1521572163474-6864f9cf17ab' },
+          { id: 21, name: 'Everyday Court Sneaker', category: 'Footwear', price: 110, color: 'White / black', image: 'photo-1542291026-7eec264c27ff', badge: 'NEW' },
+          { id: 22, name: 'Mono Runner', category: 'Footwear', price: 145, color: 'Black / grey', image: 'photo-1552346154-21d32810aba3' },
+          { id: 23, name: 'Trail Low Sneaker', category: 'Footwear', price: 138, color: 'Stone', image: 'photo-1460353581641-37baddab0fa2' },
+          { id: 24, name: 'Leather Court Low', category: 'Footwear', price: 160, color: 'White', image: 'photo-1543508282-6319a3e2621f' }
+        ];
+        const homeGrid = document.querySelector('#home-product-grid');
+        const catalogGrid = document.querySelector('#catalog-product-grid');
+        const homeView = document.querySelector('#home-view');
+        const catalogView = document.querySelector('#catalog-view');
+        const categoryFilter = document.querySelector('#category-filter');
+        const searchInput = document.querySelector('#catalog-search');
+        const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+        const imageUrl = id => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=80`;
+        const refreshIcons = () => window.lucide?.createIcons();
+        let isCatalog = false;
+        let activeCategory = 'All';
+        let activeColor = 'all';
+        let searchTerm = '';
+        let maxPrice = Infinity;
+        let sortMode = 'featured';
+        let cart;
+
+        try {
+          cart = new Map(JSON.parse(sessionStorage.getItem('veilstore-cart') || '[]'));
+        } catch {
+          cart = new Map();
+        }
+
+        const money = amount => currency.format(amount);
+
+        function visibleProducts() {
+          let items = isCatalog ? products : products.filter(product => product.featured).slice(0, 8);
+          items = items.filter(product => {
+            const color = product.color.toLowerCase();
+            const matchesCategory = !isCatalog || activeCategory === 'All' || product.category === activeCategory;
+            const matchesColor = activeColor === 'all' || (activeColor === 'neutral'
+              ? /stone|oat|sand|natural|charcoal|graphite|olive|ink|denim/.test(color)
+              : color.includes(activeColor));
+            const matchesSearch = `${product.name} ${product.category} ${product.color}`.toLowerCase().includes(searchTerm.toLowerCase());
+            return matchesCategory && matchesColor && matchesSearch && product.price <= maxPrice;
+          });
+          if (sortMode === 'price-asc') items = [...items].sort((a, b) => a.price - b.price);
+          if (sortMode === 'price-desc') items = [...items].sort((a, b) => b.price - a.price);
+          if (sortMode === 'name') items = [...items].sort((a, b) => a.name.localeCompare(b.name));
+          return items;
+        }
+
+        function renderProducts() {
+          const items = visibleProducts();
+          const grid = isCatalog ? catalogGrid : homeGrid;
+          grid.innerHTML = items.map(product => `
+            <article class="product-card group min-w-0 border-b border-black/10 pb-4">
+              <div class="relative mb-3 aspect-square overflow-hidden bg-neutral-100">
+                <img src="${imageUrl(product.image)}" alt="${product.name} in ${product.color.toLowerCase()}" class="product-image h-full w-full object-cover" loading="lazy" />
+                ${product.badge ? `<span class="absolute left-3 top-3 bg-black px-2.5 py-1.5 text-[9px] font-semibold tracking-[.12em] text-white">${product.badge}</span>` : ''}
+                <button class="add-button absolute bottom-3 left-3 right-3 flex translate-y-2 items-center justify-center gap-2 bg-black py-3 text-[11px] font-medium text-white opacity-0 transition duration-200 hover:bg-neutral-800 group-hover:translate-y-0 group-hover:opacity-100 focus:translate-y-0 focus:opacity-100" data-add="${product.id}">Add to bag <i data-lucide="plus" class="h-3.5 w-3.5"></i></button>
+                <button class="mobile-add absolute bottom-3 right-3 grid h-10 w-10 place-items-center bg-white shadow-sm sm:hidden" data-add="${product.id}" aria-label="Add ${product.name} to bag"><i data-lucide="plus" class="h-4 w-4"></i></button>
+              </div>
+              <div class="flex items-start justify-between gap-2"><div class="min-w-0"><p class="mb-1 text-[9px] font-medium uppercase tracking-[.13em] text-neutral-500">${product.category}</p><h3 class="truncate text-xs font-medium sm:text-sm">${product.name}</h3><p class="mt-1 text-[10px] text-neutral-500 sm:text-xs">${product.color}</p></div><span class="shrink-0 pt-4 text-xs font-semibold sm:text-sm">${money(product.price)}</span></div>
+            </article>`).join('');
+          const total = document.querySelector(isCatalog ? '#catalog-product-total' : '#home-product-total');
+          total.textContent = isCatalog ? `Showing ${items.length} of ${products.length} pieces` : `${items.length} selected pieces`;
+          document.querySelector(isCatalog ? '#catalog-empty-state' : '#home-empty-state').classList.toggle('hidden', items.length > 0);
+          grid.classList.toggle('hidden', items.length === 0);
+          refreshIcons();
+        }
+
+        function persistCart() {
+          sessionStorage.setItem('veilstore-cart', JSON.stringify([...cart]));
+        }
+
+        function renderCart() {
+          const items = [...cart.entries()].map(([id, quantity]) => ({ product: products.find(product => product.id === id), quantity })).filter(item => item.product && item.quantity > 0);
+          const count = items.reduce((sum, item) => sum + item.quantity, 0);
+          document.querySelector('#cart-count').textContent = count;
+          document.querySelector('#drawer-count').textContent = `(${count})`;
+          document.querySelector('#cart-summary').classList.toggle('hidden', count === 0);
+          document.querySelector('#cart-items').innerHTML = count === 0
+            ? '<div class="grid h-full place-items-center text-center"><div><i data-lucide="shopping-bag" class="mx-auto mb-4 h-8 w-8 stroke-[1.2]"></i><p class="text-sm font-medium">Your bag is empty</p><p class="mt-2 text-xs text-neutral-500">Find something you love in the collection.</p></div></div>'
+            : items.map(({ product, quantity }) => `
+              <div class="flex gap-4 border-b border-black/10 py-5">
+                <img src="${imageUrl(product.image)}" alt="" class="h-24 w-[76px] bg-neutral-100 object-cover" />
+                <div class="flex flex-1 flex-col justify-between py-1">
+                  <div class="flex justify-between gap-2"><div><p class="text-sm font-medium">${product.name}</p><p class="mt-1 text-xs text-neutral-500">${product.color}</p></div><span class="text-sm font-semibold">${money(product.price * quantity)}</span></div>
+                  <div class="flex items-center gap-3 text-xs"><button class="quantity-button grid h-7 w-7 place-items-center rounded-full border border-black/15" data-id="${product.id}" data-delta="-1" aria-label="Decrease quantity"><i data-lucide="minus" class="h-3 w-3"></i></button><span>${quantity}</span><button class="quantity-button grid h-7 w-7 place-items-center rounded-full border border-black/15" data-id="${product.id}" data-delta="1" aria-label="Increase quantity"><i data-lucide="plus" class="h-3 w-3"></i></button><button class="remove-button ml-auto text-neutral-500 underline underline-offset-2" data-id="${product.id}">Remove</button></div>
+                </div>
+              </div>`).join('');
+          document.querySelector('#cart-total').textContent = money(items.reduce((sum, item) => sum + item.product.price * item.quantity, 0));
+          refreshIcons();
+        }
+
+        function showToast(message) {
+          const toast = document.querySelector('#toast');
+          toast.textContent = message;
+          toast.classList.remove('translate-y-3', 'opacity-0');
+          toast.classList.add('translate-y-0', 'opacity-100');
+          clearTimeout(showToast.timer);
+          showToast.timer = setTimeout(() => toast.classList.add('translate-y-3', 'opacity-0'), 1900);
+        }
+
+        function setCartOpen(open) {
+          const layer = document.querySelector('#cart-layer');
+          layer.classList.toggle('hidden', !open);
+          layer.setAttribute('aria-hidden', String(!open));
+          requestAnimationFrame(() => document.querySelector('#cart-drawer').classList.toggle('translate-x-full', !open));
+          document.body.classList.toggle('overflow-hidden', open);
+          if (open) document.querySelector('#cart-close').focus();
+        }
+
+        function closeMobileMenu() {
+          const menu = document.querySelector('#mobile-menu');
+          const button = document.querySelector('#mobile-menu-open');
+          menu.classList.add('hidden');
+          button.setAttribute('aria-expanded', 'false');
+          button.setAttribute('aria-label', 'Open menu');
+          button.innerHTML = '<i data-lucide="menu" class="h-5 w-5"></i>';
+          refreshIcons();
+        }
+
+        function syncRoute() {
+          const hash = window.location.hash.slice(1);
+          const separator = hash.indexOf('?');
+          const routeName = separator === -1 ? hash : hash.slice(0, separator);
+          const params = new URLSearchParams(separator === -1 ? '' : hash.slice(separator + 1));
+          isCatalog = routeName === 'catalog';
+          homeView.classList.toggle('hidden', isCatalog);
+          catalogView.classList.toggle('hidden', !isCatalog);
+          document.title = isCatalog ? 'Shop all — VEILSTORE' : 'VEILSTORE — Everyday, reconsidered';
+          closeMobileMenu();
+
+          if (isCatalog) {
+            const requestedCategory = params.get('category') || 'All';
+            activeCategory = [...categoryFilter.options].some(option => option.value === requestedCategory) ? requestedCategory : 'All';
+            categoryFilter.value = activeCategory;
+            activeColor = 'all';
+            searchTerm = params.get('q') || '';
+            maxPrice = Infinity;
+            sortMode = params.get('sort') || 'featured';
+            document.querySelector('#color-filter').value = activeColor;
+            document.querySelector('#price-filter').value = '0';
+            document.querySelector('#sort-select').value = [...document.querySelector('#sort-select').options].some(option => option.value === sortMode) ? sortMode : 'featured';
+            sortMode = document.querySelector('#sort-select').value;
+            searchInput.value = searchTerm;
+            renderProducts();
+            window.scrollTo(0, 0);
+            if (params.get('focus') === 'search') requestAnimationFrame(() => searchInput.focus());
+          } else {
+            activeCategory = 'All';
+            activeColor = 'all';
+            searchTerm = '';
+            maxPrice = Infinity;
+            sortMode = 'featured';
+            renderProducts();
+            if (routeName === 'about') requestAnimationFrame(() => document.querySelector('#about').scrollIntoView());
+            else window.scrollTo(0, 0);
+          }
+        }
+
+        window.addEventListener('hashchange', syncRoute);
+        document.querySelector('#category-filter').addEventListener('change', event => {
+          activeCategory = event.target.value;
+          const nextHash = activeCategory === 'All' ? '#catalog' : `#catalog?category=${encodeURIComponent(activeCategory)}`;
+          history.replaceState(null, '', nextHash);
+          renderProducts();
+        });
+        document.querySelector('#catalog-search').addEventListener('input', event => {
+          searchTerm = event.target.value.trim();
+          renderProducts();
+        });
+        document.querySelector('#price-filter').addEventListener('change', event => {
+          maxPrice = Number(event.target.value) || Infinity;
+          renderProducts();
+        });
+        document.querySelector('#color-filter').addEventListener('change', event => {
+          activeColor = event.target.value;
+          renderProducts();
+        });
+        document.querySelector('#sort-select').addEventListener('change', event => {
+          sortMode = event.target.value;
+          renderProducts();
+        });
+        [homeGrid, catalogGrid].forEach(grid => grid.addEventListener('click', event => {
+          const button = event.target.closest('[data-add]');
+          if (!button) return;
+          const id = Number(button.dataset.add);
+          cart.set(id, (cart.get(id) || 0) + 1);
+          persistCart();
+          renderCart();
+          showToast(`${products.find(product => product.id === id).name} added to your bag`);
+        }));
+        document.querySelector('#cart-items').addEventListener('click', event => {
+          const quantityButton = event.target.closest('.quantity-button');
+          const removeButton = event.target.closest('.remove-button');
+          if (quantityButton) {
+            const id = Number(quantityButton.dataset.id);
+            const next = (cart.get(id) || 0) + Number(quantityButton.dataset.delta);
+            if (next <= 0) cart.delete(id); else cart.set(id, next);
+            persistCart();
+            renderCart();
+          }
+          if (removeButton) {
+            cart.delete(Number(removeButton.dataset.id));
+            persistCart();
+            renderCart();
+          }
+        });
+        document.querySelector('#cart-open').addEventListener('click', () => setCartOpen(true));
+        document.querySelector('#cart-close').addEventListener('click', () => setCartOpen(false));
+        document.querySelector('#cart-backdrop').addEventListener('click', () => setCartOpen(false));
+        document.addEventListener('keydown', event => { if (event.key === 'Escape') setCartOpen(false); });
+        document.querySelector('#checkout-button').addEventListener('click', () => showToast('Checkout is coming soon.'));
+        document.querySelector('#mobile-menu-open').addEventListener('click', event => {
+          const menu = document.querySelector('#mobile-menu');
+          const open = !menu.classList.toggle('hidden');
+          event.currentTarget.setAttribute('aria-expanded', String(open));
+          event.currentTarget.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+          event.currentTarget.innerHTML = `<i data-lucide="${open ? 'x' : 'menu'}" class="h-5 w-5"></i>`;
+          refreshIcons();
+        });
+        document.querySelectorAll('#mobile-menu a').forEach(link => link.addEventListener('click', closeMobileMenu));
+
+        renderCart();
+        syncRoute();
+        refreshIcons();
+      });
+    </script>
   </body>
 </html>
