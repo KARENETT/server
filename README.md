@@ -22,7 +22,7 @@
 - сетевые оптимизации (BBR/sysctl/TFO);
 - установка dev-инструментов и runtime-компонентов;
 - развёртывание RemnaNode и self-steal Caddy/Nginx через Docker Compose;
-- единый интерактивный запуск через `setup.sh`.
+- интерактивное меню и CLI-команды через `setup.sh` и `karenet-setup`.
 
 ---
 
@@ -92,8 +92,33 @@ sudo karenet-setup
 
 - RemnaNode создаётся в `/opt/remnanode/docker-compose.yml`; скрипт запрашивает IP панели, TCP-порт ноды (по умолчанию `30100`) и скрытый `SECRET_KEY`. UFW разрешает порт ноды только с IP панели; правило сохраняется для восстановления после сброса UFW. Ключ хранится в `/opt/remnanode/.env` с правами `600`. Создаётся `/var/log/remnanode`; если `logrotate` отсутствует, он устанавливается, а правила ротации записываются в `/etc/logrotate.d/remnanode` (`size 50M`, 5 архивов, gzip, `copytruncate`) и проверяются командой `logrotate -vf`. Параметр `-f` принудительно ротирует существующие непустые логи и архивирует их также при повторной установке.
 - Self-steal создаёт Caddy/Nginx Compose-стек в `/opt/remnanode/web` и запрашивает домены `raw` и `xhttp`. DNS должен вести прямо на сервер; TCP/80 нужен для ACME. Nginx направляет raw на Xray `127.0.0.1:10443`, XHTTP — на `127.0.0.1:10444`, используя PROXY protocol. Caddy обслуживает оба домена на `127.0.0.1:9443` и перенаправляет HTTP для обоих. Оба Xray inbound должны слушать соответствующие порты и принимать PROXY protocol. UFW должен быть установлен: при установке добавляются правила allow для TCP/80, TCP/443 и TCP/9443. Caddy на 9443 слушает только loopback, поэтому правило не делает его доступным извне при текущей конфигурации.
-- UFW настраивается в меню сервера (`1 → 7`): входящие соединения по умолчанию запрещены; разрешаются выбранный TCP-порт SSH, `80/tcp`, `443/tcp` и, по желанию, `ufw allow from <IP_ПАНЕЛИ> to any port <ПОРТ> proto tcp comment 'remnanode: только панель'`. IP панели и порт вводятся пользователем.
+- Настройка UFW в меню сервера (`1 → 7`) запрещает входящие подключения по умолчанию и разрешает выбранный TCP-порт SSH, `80/tcp` и `443/tcp`. Полная установка использует порт, выбранный при настройке SSH, без повторного запроса и не спрашивает IP панели. RemnaNode сохраняет правило доступа с IP панели и портом ноды; настройка UFW восстанавливает его без повторного ввода. При отдельной настройке UFW необязательный ввод IP панели доступен, только если сохранённого правила ещё нет.
+- В `/etc/ufw/before.rules` блокируются ICMPv4: для INPUT — `destination-unreachable`, `time-exceeded`, `parameter-problem`, `echo-request`, `source-quench`; для FORWARD — первые четыре типа. ICMPv6 не изменяется; блокировка `destination-unreachable` и `time-exceeded` может нарушить PMTU и сетевую диагностику.
 - При установке self-steal скрипт попросит остановить системный Caddy и контейнеры, занимающие порты `80` или `443`.
+
+### Статус, управление и CLI
+
+Подменю RemnaNode и self-steal показывают состояние служб и доступные для него действия. Для RemnaNode доступны статус, запуск, остановка, перезапуск, логи и обновление образа. Для self-steal — статус Caddy/NGINX, домены, порты, краткое состояние SSL, управление службами, логи, проверка конфигурации и подробности сертификатов.
+
+Без аргументов `karenet-setup` открывает меню. Те же функции доступны из командной строки:
+
+```bash
+sudo karenet-setup remnanode status
+sudo karenet-setup remnanode logs
+sudo karenet-setup remnanode restart
+sudo karenet-setup remnanode update
+sudo karenet-setup selfsteal status
+sudo karenet-setup selfsteal restart
+sudo karenet-setup selfsteal validate
+sudo karenet-setup selfsteal cert
+sudo karenet-setup firewall status
+sudo karenet-setup check-updates
+sudo karenet-setup update
+sudo karenet-setup --version
+```
+
+Обновление скрипта выполняется только явно через `update`; при старте меню сеть не проверяется. Загрузчик сначала использует GitHub Raw, затем jsDelivr как запасной источник. Конфигурации Compose, Caddy и NGINX проверяются до запуска. При ошибке проверки или запуска скрипт восстанавливает предыдущую конфигурацию; ручные изменения не перезаписываются — рядом создаётся `.new-<версия>` и выводится diff. Для управляемых файлов сохраняются контрольная сумма `.karenet.sha256` и резервная копия `.bak`. `SECRET_KEY` хранится отдельно в `/opt/remnanode/.env` и сохраняется при повторной настройке.
+
 
 ---
 

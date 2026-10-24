@@ -150,3 +150,102 @@ write_file_atomically() {
         return 1
     fi
 }
+managed_file_sidecar() {
+    printf '%s.karenet.sha256' "$1"
+}
+
+managed_file_sha256() {
+    sha256sum -- "$1" | awk '{print $1}'
+}
+
+managed_file_is_safe() {
+    local target="$1"
+    local candidate="$2"
+    local sidecar expected actual
+
+    [[ -f "$target" ]] || return 0
+    [[ -f "$candidate" ]] || return 1
+    cmp -s -- "$target" "$candidate" && return 0
+
+    sidecar="$(managed_file_sidecar "$target")"
+    [[ -r "$sidecar" ]] || return 1
+    IFS= read -r expected < "$sidecar" || return 1
+    actual="$(managed_file_sha256 "$target")" || return 1
+    [[ -n "$expected" && "$expected" == "$actual" ]]
+}
+
+managed_file_save_candidate() {
+    local target="$1"
+    local candidate="$2"
+    local mode="${3:-644}"
+    local new_file="${target}.new-${SCRIPT_VERSION:-unknown}"
+
+    if ! install -m "$mode" -- "$candidate" "$new_file"; then
+        error "$(t managed_config_candidate_failed) $new_file"
+        return 1
+    fi
+
+    warning "$(t managed_config_modified) $target"
+    if [[ -f "$target" ]] && command -v diff >/dev/null 2>&1; then
+        diff -u -- "$target" "$new_file" || true
+    fi
+    info "$(t managed_config_candidate_saved) $new_file"
+}
+
+managed_file_commit() {
+    local target="$1"
+    local mode="$2"
+    local candidate="$3"
+    local sidecar backup hash
+
+    sidecar="$(managed_file_sidecar "$target")"
+    if [[ -f "$target" ]] && ! cmp -s -- "$target" "$candidate"; then
+        backup="${target}.bak"
+        if ! cp -p -- "$target" "$backup"; then
+            error "$(t managed_config_backup_failed) $target"
+            return 1
+        fi
+    fi
+
+    if ! write_file_atomically "$target" "$mode" < "$candidate"; then
+        return 1
+    fi
+    hash="$(managed_file_sha256 "$target")" || return 1
+    write_file_atomically "$sidecar" 644 <<< "$hash"
+}
+
+managed_files_snapshot() {
+    local snapshot_dir="$1"
+    shift
+    local index=0 target file
+
+    install -d -m 700 "$snapshot_dir" || return 1
+    for target in "$@"; do
+        for file in "$target" "$(managed_file_sidecar "$target")"; do
+            index=$((index + 1))
+            if [[ -e "$file" ]]; then
+                cp -p -- "$file" "$snapshot_dir/$index" || return 1
+                : > "$snapshot_dir/$index.present"
+            else
+                : > "$snapshot_dir/$index.missing"
+            fi
+        done
+    done
+}
+
+managed_files_restore() {
+    local snapshot_dir="$1"
+    shift
+    local index=0 target file
+
+    for target in "$@"; do
+        for file in "$target" "$(managed_file_sidecar "$target")"; do
+            index=$((index + 1))
+            if [[ -f "$snapshot_dir/$index.present" ]]; then
+                cp -p -- "$snapshot_dir/$index" "$file" || return 1
+            else
+                rm -f -- "$file"
+            fi
+        done
+    done
+}

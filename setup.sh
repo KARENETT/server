@@ -3,17 +3,80 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-# Получение директории скриптов
-SCRIPT_SOURCE="$0"
-if [[ -n "${BASH_SOURCE+x}" && -n "${BASH_SOURCE[0]-}" ]]; then
-    SCRIPT_SOURCE="${BASH_SOURCE[0]}"
-fi
+# Resolve installed shortcuts while preserving process-substitution launchers.
+SCRIPT_SOURCE="${BASH_SOURCE[0]:-$0}"
+case "$SCRIPT_SOURCE" in
+    /dev/fd/*|/proc/*) ;;
+    *) SCRIPT_SOURCE="$(readlink -f -- "$SCRIPT_SOURCE" 2>/dev/null || printf '%s' "$SCRIPT_SOURCE")" ;;
+esac
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" 2>/dev/null && pwd || pwd)"
-SCRIPT_VERSION="1.0.0"
+SCRIPT_VERSION="1.2.0"
+
 LANGUAGE="${LANGUAGE:-}"
+SSH_CONFIGURED_PORT=""
 INSTALL_DIR="/opt/karenet-setup"
 SHORTCUT_PATH="/usr/local/bin/karenet-setup"
 REPO_RAW_BASE="https://raw.githubusercontent.com/KARENETT/server/main"
+REPO_MIRROR_BASE="https://cdn.jsdelivr.net/gh/KARENETT/server@main"
+RUNTIME_FILES=(
+    "setup.sh"
+    "scripts/config.sh"
+    "scripts/utils.sh"
+    "scripts/modules/user.sh"
+    "scripts/modules/system.sh"
+    "scripts/modules/swap.sh"
+    "scripts/modules/ulimits.sh"
+    "scripts/modules/packages.sh"
+    "scripts/modules/ssh.sh"
+    "scripts/modules/firewall.sh"
+    "scripts/modules/zsh.sh"
+    "scripts/modules/nodejs.sh"
+    "scripts/modules/uv.sh"
+    "scripts/modules/docker.sh"
+    "scripts/modules/xanmod.sh"
+    "scripts/modules/sysctl_hardening.sh"
+    "scripts/modules/trafficguard.sh"
+    "scripts/modules/ds_guard.sh"
+    "scripts/modules/warp_native.sh"
+    "scripts/modules/caddy_selfsteal.sh"
+    "scripts/modules/remnanode.sh"
+    "scripts/modules/psiphon.sh"
+    "scripts/assets/selfsteal/index.html"
+    "translation/ru.sh"
+    "translation/en.sh"
+)
+
+fetch_runtime_file() {
+    local path="$1"
+    local destination="$2"
+    local base
+
+    mkdir -p "$(dirname "$destination")" || return 1
+    for base in "$REPO_RAW_BASE" "$REPO_MIRROR_BASE"; do
+        rm -f -- "$destination"
+        if curl -fsSL --connect-timeout 5 --max-time 45 "$base/$path" -o "$destination" &&
+            [[ -s "$destination" ]]; then
+            if [[ "$path" == *.sh ]] && ! bash -n "$destination" >/dev/null 2>&1; then
+                continue
+            fi
+            return 0
+        fi
+    done
+    rm -f -- "$destination"
+    return 1
+}
+
+download_runtime_files() {
+    local target_dir="$1"
+    local file
+
+    for file in "${RUNTIME_FILES[@]}"; do
+        if ! fetch_runtime_file "$file" "$target_dir/$file"; then
+            echo "[ERROR] Не удалось скачать или проверить: $file"
+            return 1
+        fi
+    done
+}
 
 # Доступ только для суперпользователя
 if [[ $EUID -ne 0 ]]; then
@@ -28,56 +91,17 @@ if [[ ! -t 0 && -r /dev/tty ]]; then
 fi
 
 ensure_global_install() {
-    local source_dir target_dir tmp_dir f
-
-    download_runtime_files() {
-        mkdir -p "$tmp_dir/scripts/modules" "$tmp_dir/translation"
-
-        local files=(
-            "setup.sh"
-            "scripts/config.sh"
-            "scripts/utils.sh"
-            "scripts/modules/user.sh"
-            "scripts/modules/system.sh"
-            "scripts/modules/swap.sh"
-            "scripts/modules/ulimits.sh"
-            "scripts/modules/packages.sh"
-            "scripts/modules/ssh.sh"
-            "scripts/modules/firewall.sh"
-            "scripts/modules/zsh.sh"
-            "scripts/modules/nodejs.sh"
-            "scripts/modules/uv.sh"
-            "scripts/modules/docker.sh"
-            "scripts/modules/xanmod.sh"
-            "scripts/modules/sysctl_hardening.sh"
-            "scripts/modules/trafficguard.sh"
-            "scripts/modules/ds_guard.sh"
-            "scripts/modules/warp_native.sh"
-            "scripts/modules/caddy_selfsteal.sh"
-            "scripts/modules/remnanode.sh"
-            "scripts/modules/psiphon.sh"
-            "scripts/assets/selfsteal/index.html"
-            "translation/ru.sh"
-            "translation/en.sh"
-        )
-
-        for f in "${files[@]}"; do
-            mkdir -p "$tmp_dir/$(dirname "$f")"
-            curl -fsSL "$REPO_RAW_BASE/$f" -o "$tmp_dir/$f" || {
-                echo "[ERROR] Не удалось скачать: $f"
-                exit 1
-            }
-        done
-    }
+    local source_dir target_dir tmp_dir
 
     if [[ ! -f "$SCRIPT_DIR/scripts/config.sh" ]]; then
         tmp_dir="$(mktemp -d /tmp/karenet-setup.XXXXXX)"
+        if ! download_runtime_files "$tmp_dir"; then
+            rm -rf -- "$tmp_dir"
+            exit 1
+        fi
         mkdir -p "$INSTALL_DIR"
-
-        download_runtime_files
         cp -a "$tmp_dir/." "$INSTALL_DIR/"
-
-        rm -rf "$tmp_dir"
+        rm -rf -- "$tmp_dir"
         chmod +x "$INSTALL_DIR/setup.sh"
         ln -sfn "$INSTALL_DIR/setup.sh" "$SHORTCUT_PATH"
         exec "$INSTALL_DIR/setup.sh" "$@"
@@ -86,14 +110,12 @@ ensure_global_install() {
     mkdir -p "$INSTALL_DIR"
     source_dir="$(realpath "$SCRIPT_DIR")"
     target_dir="$(realpath "$INSTALL_DIR")"
-
     if [[ "$source_dir" != "$target_dir" && -d "$SCRIPT_DIR/scripts" ]]; then
         cp -a "$SCRIPT_DIR/." "$INSTALL_DIR/"
     fi
 
     chmod +x "$INSTALL_DIR/setup.sh"
     ln -sfn "$INSTALL_DIR/setup.sh" "$SHORTCUT_PATH"
-
     if [[ "$SCRIPT_DIR/setup.sh" != "$INSTALL_DIR/setup.sh" ]]; then
         exec "$INSTALL_DIR/setup.sh" "$@"
     fi
@@ -148,7 +170,7 @@ install_all() {
     setup_ulimits
     install_packages
     setup_ssh
-    setup_firewall
+    setup_firewall "$SSH_CONFIGURED_PORT" "skip-panel-prompt"
     setup_trafficguard
     setup_ds_guard
     setup_zsh
@@ -290,7 +312,15 @@ is_warp_native_enabled() { is_warp_native_installed; }
 
 toggle_swap() { if is_swap_enabled; then disable_swap; else setup_swap; fi; }
 toggle_ulimits() { if is_ulimits_enabled; then disable_ulimits; else setup_ulimits; fi; }
-toggle_firewall() { if is_firewall_enabled; then disable_firewall; else setup_firewall; fi; }
+toggle_firewall() {
+    if is_firewall_enabled; then
+        disable_firewall
+    elif [[ -n "$SSH_CONFIGURED_PORT" ]]; then
+        setup_firewall "$SSH_CONFIGURED_PORT"
+    else
+        setup_firewall
+    fi
+}
 toggle_sysctl_hardening() { if is_sysctl_hardening_enabled; then disable_sysctl_hardening; else setup_sysctl_hardening; fi; }
 
 menu_option_text() {
@@ -307,35 +337,46 @@ menu_option_text() {
     esac
 }
 
-check_script_updates() {
-    if ! command -v git >/dev/null 2>&1; then
-        error "$(t git_not_found)"
+get_remote_script_version() {
+    local temporary_file remote_version
+
+    temporary_file="$(mktemp "${TMPDIR:-/tmp}/karenet-setup.version.XXXXXX")" || return 1
+    if ! fetch_runtime_file "setup.sh" "$temporary_file"; then
+        rm -f -- "$temporary_file"
         return 1
     fi
+    remote_version="$(awk -F'"' '/^SCRIPT_VERSION="/ { print $2; exit }' "$temporary_file")"
+    rm -f -- "$temporary_file"
+    [[ "$remote_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]] || return 1
+    printf '%s' "$remote_version"
+}
 
-    if ! git -C "$INSTALL_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        warning "$(t updates_no_repo)"
-        return 0
-    fi
+version_is_newer() {
+    local current="$1"
+    local candidate="$2"
+    local newest
 
-    local branch local_sha remote_sha
-    branch="$(git -C "$INSTALL_DIR" rev-parse --abbrev-ref HEAD)"
+    [[ "$current" != "$candidate" ]] || return 1
+    newest="$(printf '%s\n%s\n' "$current" "$candidate" | sort -V | tail -n 1)"
+    [[ "$newest" == "$candidate" ]]
+}
+check_script_updates() {
+    local remote_version
 
-    git -C "$INSTALL_DIR" fetch origin "$branch" >/dev/null 2>&1 || {
+    remote_version="$(get_remote_script_version)" || {
         error "$(t updates_fetch_failed)"
         return 1
     }
-
-    local_sha="$(git -C "$INSTALL_DIR" rev-parse HEAD)"
-    remote_sha="$(git -C "$INSTALL_DIR" rev-parse "origin/$branch")"
-
-    if [[ "$local_sha" == "$remote_sha" ]]; then
-        info "$(t updates_ok)"
-    else
-        warning "$(t updates_available)"
+    if [[ "$remote_version" == "$SCRIPT_VERSION" ]]; then
+        info "$(t updates_ok) ($remote_version)"
+    elif version_is_newer "$SCRIPT_VERSION" "$remote_version"; then
+        warning "$(t updates_available) ($remote_version)"
         info "$(t updates_hint)"
+    else
+        warning "$(t updates_local_newer) ($remote_version)"
     fi
 }
+
 
 uninstall_script() {
     if confirm_yes_no "$(t uninstall_confirm)"; then
@@ -354,27 +395,93 @@ uninstall_script() {
 }
 
 self_update_script() {
-    if ! command -v git >/dev/null 2>&1; then
-        error "$(t git_not_found)"
-        return 1
-    fi
+    local restart_menu=0
+    local stage_dir=""
+    local backup_dir="${INSTALL_DIR}.rollback.$$"
+    local remote_version=""
+    local had_install=0
 
-    if ! git -C "$INSTALL_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        warning "$(t updates_no_repo)"
-        return 0
+    if [[ "${1:-}" == "--restart-menu" ]]; then
+        restart_menu=1
     fi
-
-    local branch
-    branch="$(git -C "$INSTALL_DIR" rev-parse --abbrev-ref HEAD)"
     log "$(t updates_run)"
-
-    git -C "$INSTALL_DIR" fetch origin "$branch" && git -C "$INSTALL_DIR" pull --ff-only origin "$branch" || {
+    remote_version="$(get_remote_script_version)" || {
         error "$(t updates_fetch_failed)"
         return 1
     }
+    if ! version_is_newer "$SCRIPT_VERSION" "$remote_version"; then
+        if [[ "$remote_version" == "$SCRIPT_VERSION" ]]; then
+            info "$(t updates_ok) ($remote_version)"
+        else
+            warning "$(t updates_local_newer) ($remote_version)"
+        fi
+        return 0
+    fi
 
-    exec "$INSTALL_DIR/setup.sh"
+    stage_dir="$(mktemp -d "$(dirname "$INSTALL_DIR")/karenet-setup.stage.XXXXXX")" || {
+        error "$(t updates_stage_failed)"
+        return 1
+    }
+    if ! download_runtime_files "$stage_dir"; then
+        rm -rf -- "$stage_dir"
+        error "$(t updates_fetch_failed)"
+        return 1
+    fi
+
+    remote_version="$(awk -F'"' '/^SCRIPT_VERSION="/ { print $2; exit }' "$stage_dir/setup.sh")"
+    if [[ ! "$remote_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+        rm -rf -- "$stage_dir"
+        error "$(t updates_version_invalid)"
+        return 1
+    fi
+    if ! version_is_newer "$SCRIPT_VERSION" "$remote_version"; then
+        rm -rf -- "$stage_dir"
+        if [[ "$remote_version" == "$SCRIPT_VERSION" ]]; then
+            info "$(t updates_ok) ($remote_version)"
+        else
+            warning "$(t updates_local_newer) ($remote_version)"
+        fi
+        return 0
+    fi
+
+    chmod +x "$stage_dir/setup.sh"
+    if [[ -e "$INSTALL_DIR" ]]; then
+        if ! mv -- "$INSTALL_DIR" "$backup_dir"; then
+            rm -rf -- "$stage_dir"
+            error "$(t updates_install_failed)"
+            return 1
+        fi
+        had_install=1
+    fi
+    if ! mv -- "$stage_dir" "$INSTALL_DIR"; then
+        rm -rf -- "$stage_dir"
+        if (( had_install )); then
+            mv -- "$backup_dir" "$INSTALL_DIR" || true
+        fi
+        error "$(t updates_install_failed)"
+        return 1
+    fi
+    if ! bash -n "$INSTALL_DIR/setup.sh" ||
+        ! ln -sfn "$INSTALL_DIR/setup.sh" "$SHORTCUT_PATH"; then
+        rm -rf -- "$INSTALL_DIR"
+        if (( had_install )); then
+            mv -- "$backup_dir" "$INSTALL_DIR" || true
+            ln -sfn "$INSTALL_DIR/setup.sh" "$SHORTCUT_PATH" || true
+        fi
+        error "$(t updates_install_failed)"
+        return 1
+    fi
+
+    rm -rf -- "$backup_dir"
+    log "$(t updates_installed) $remote_version"
+    if (( restart_menu )); then
+        export LANGUAGE
+        exec "$INSTALL_DIR/setup.sh"
+    fi
 }
+
+
+
 
 set_language() {
     if [[ -n "$LANGUAGE" ]]; then
@@ -577,7 +684,7 @@ server_settings_menu() {
             16) setup_warp_native ;;
             17) setup_psiphon ;;
             18) check_script_updates ;;
-            19) self_update_script ;;
+            19) self_update_script --restart-menu ;;
             20) uninstall_script ;;
             0) return ;;
             *) error "$(t invalid_choice)"; read -rp "${PROMPT_PREFIX} $(t press_enter)"; continue ;;
@@ -590,18 +697,60 @@ server_settings_menu() {
 }
 
 show_remnanode_menu() {
+    local state
+
     menu_header "$(t remnanode_menu_title)"
+    state="$(remnanode_service_state)"
     echo -e "${MAGENTA}$(t menu_status_title)${NC}"
-    print_service_status status_remnanode_label remnanode
+    remnanode_print_status
     echo ""
     menu_divider
-    echo -e "${MAGENTA}$(t category_remnanode)${NC}"
-    echo -e " ${GREEN}1.${NC} $(t opt_26)"
+
+    case "$state" in
+        missing)
+            echo -e "${MAGENTA}$(t category_install)${NC}"
+            echo -e " ${GREEN}1.${NC} $(t opt_remnanode_install)"
+            ;;
+        unavailable)
+            echo -e "${MAGENTA}$(t category_monitor)${NC}"
+            echo -e " ${GREEN}5.${NC} $(t opt_remnanode_status)"
+            ;;
+        running)
+            echo -e "${MAGENTA}$(t category_manage)${NC}"
+            echo -e " ${GREEN}3.${NC} $(t opt_remnanode_stop)"
+            echo -e " ${GREEN}4.${NC} $(t opt_remnanode_restart)"
+            echo -e "${MAGENTA}$(t category_monitor)${NC}"
+            echo -e " ${GREEN}5.${NC} $(t opt_remnanode_status)"
+            echo -e " ${GREEN}6.${NC} $(t opt_remnanode_logs)"
+            echo -e "${MAGENTA}$(t category_updates)${NC}"
+            echo -e " ${GREEN}7.${NC} $(t opt_remnanode_update)"
+            ;;
+        stopped)
+            echo -e "${MAGENTA}$(t category_manage)${NC}"
+            echo -e " ${GREEN}2.${NC} $(t opt_remnanode_start)"
+            echo -e "${MAGENTA}$(t category_monitor)${NC}"
+            echo -e " ${GREEN}5.${NC} $(t opt_remnanode_status)"
+            echo -e " ${GREEN}6.${NC} $(t opt_remnanode_logs)"
+            echo -e "${MAGENTA}$(t category_updates)${NC}"
+            echo -e " ${GREEN}7.${NC} $(t opt_remnanode_update)"
+            ;;
+        restarting)
+            echo -e "${MAGENTA}$(t category_manage)${NC}"
+            echo -e " ${GREEN}3.${NC} $(t opt_remnanode_stop)"
+            echo -e " ${GREEN}4.${NC} $(t opt_remnanode_restart)"
+            echo -e "${MAGENTA}$(t category_monitor)${NC}"
+            echo -e " ${GREEN}5.${NC} $(t opt_remnanode_status)"
+            echo -e " ${GREEN}6.${NC} $(t opt_remnanode_logs)"
+            echo -e "${MAGENTA}$(t category_updates)${NC}"
+            echo -e " ${GREEN}7.${NC} $(t opt_remnanode_update)"
+            ;;
+    esac
     echo ""
     menu_divider
     echo -e " ${RED}0.${NC} $(t opt_back)"
     echo ""
 }
+
 
 remnanode_settings_menu() {
     local choice
@@ -610,27 +759,80 @@ remnanode_settings_menu() {
         read -rp "${PROMPT_PREFIX} $(t choose_remnanode_item) " choice
         echo ""
         case "$choice" in
-            1) setup_remnanode; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            1) setup_remnanode || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            2) remnanode_start || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            3) remnanode_stop || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            4) remnanode_restart || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            5) remnanode_print_status || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            6) remnanode_logs || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            7) remnanode_update || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
             0) return ;;
-            *) error "$(t invalid_choice)"; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            *) error "$(t invalid_choice)" || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
         esac
     done
 }
 
+
 show_selfsteal_menu() {
+    local state
+
     menu_header "$(t selfsteal_menu_title)"
+    state="$(selfsteal_service_state)"
     echo -e "${MAGENTA}$(t menu_status_title)${NC}"
-    print_service_status status_caddy_label caddy
-    print_service_status status_nginx_label nginx
+    selfsteal_print_status
     echo ""
     menu_divider
-    echo -e "${MAGENTA}$(t category_selfsteal)${NC}"
-    echo -e " ${GREEN}1.${NC} $(t opt_24)"
+
+    case "$state" in
+        missing)
+            echo -e "${MAGENTA}$(t category_install)${NC}"
+            echo -e " ${GREEN}1.${NC} $(t opt_selfsteal_install)"
+            ;;
+        unavailable)
+            echo -e "${MAGENTA}$(t category_monitor)${NC}"
+            echo -e " ${GREEN}5.${NC} $(t opt_selfsteal_status)"
+            ;;
+        running)
+            echo -e "${MAGENTA}$(t category_manage)${NC}"
+            echo -e " ${GREEN}3.${NC} $(t opt_selfsteal_stop)"
+            echo -e " ${GREEN}4.${NC} $(t opt_selfsteal_restart)"
+            echo -e "${MAGENTA}$(t category_monitor)${NC}"
+            echo -e " ${GREEN}5.${NC} $(t opt_selfsteal_status)"
+            echo -e " ${GREEN}6.${NC} $(t opt_selfsteal_logs)"
+            echo -e " ${GREEN}7.${NC} $(t opt_selfsteal_validate)"
+            echo -e "${MAGENTA}$(t category_ssl)${NC}"
+            echo -e " ${GREEN}8.${NC} $(t opt_selfsteal_cert)"
+            ;;
+        partial)
+            echo -e "${MAGENTA}$(t category_manage)${NC}"
+            echo -e " ${GREEN}2.${NC} $(t opt_selfsteal_start)"
+            echo -e " ${GREEN}3.${NC} $(t opt_selfsteal_stop)"
+            echo -e " ${GREEN}4.${NC} $(t opt_selfsteal_restart)"
+            echo -e "${MAGENTA}$(t category_monitor)${NC}"
+            echo -e " ${GREEN}5.${NC} $(t opt_selfsteal_status)"
+            echo -e " ${GREEN}6.${NC} $(t opt_selfsteal_logs)"
+            echo -e " ${GREEN}7.${NC} $(t opt_selfsteal_validate)"
+            echo -e "${MAGENTA}$(t category_ssl)${NC}"
+            echo -e " ${GREEN}8.${NC} $(t opt_selfsteal_cert)"
+            ;;
+        stopped)
+            echo -e "${MAGENTA}$(t category_manage)${NC}"
+            echo -e " ${GREEN}2.${NC} $(t opt_selfsteal_start)"
+            echo -e "${MAGENTA}$(t category_monitor)${NC}"
+            echo -e " ${GREEN}5.${NC} $(t opt_selfsteal_status)"
+            echo -e " ${GREEN}6.${NC} $(t opt_selfsteal_logs)"
+            echo -e " ${GREEN}7.${NC} $(t opt_selfsteal_validate)"
+            echo -e "${MAGENTA}$(t category_ssl)${NC}"
+            echo -e " ${GREEN}8.${NC} $(t opt_selfsteal_cert)"
+            ;;
+    esac
     echo ""
     menu_divider
     echo -e " ${RED}0.${NC} $(t opt_back)"
     echo ""
 }
+
+
 
 selfsteal_settings_menu() {
     local choice
@@ -639,12 +841,21 @@ selfsteal_settings_menu() {
         read -rp "${PROMPT_PREFIX} $(t choose_selfsteal_item) " choice
         echo ""
         case "$choice" in
-            1) setup_caddy_selfsteal; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            1) setup_caddy_selfsteal || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            2) selfsteal_start || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            3) selfsteal_stop || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            4) selfsteal_restart || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            5) selfsteal_print_status || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            6) selfsteal_logs || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            7) selfsteal_validate_config || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            8) selfsteal_print_certificate_details || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
             0) return ;;
-            *) error "$(t invalid_choice)"; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            *) error "$(t invalid_choice)" || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
         esac
     done
 }
+
+
 
 main() {
     local choice
@@ -669,5 +880,131 @@ main() {
 }
 
 
-# Запуск основной функции
-main
+set_cli_language() {
+    [[ -n "$LANGUAGE" ]] && return 0
+    if [[ "${LC_ALL:-${LANG:-}}" == ru* ]]; then
+        LANGUAGE="ru"
+    else
+        LANGUAGE="en"
+    fi
+}
+
+show_help() {
+    echo "$(t cli_usage_title)"
+    echo
+    echo "  sudo karenet-setup"
+    echo "  sudo karenet-setup remnanode [install|status|start|stop|restart|logs|update]"
+    echo "  sudo karenet-setup selfsteal [install|status|start|stop|restart|logs|validate|cert]"
+    echo "  sudo karenet-setup firewall status"
+    echo "  sudo karenet-setup [check-updates|update|version]"
+}
+
+firewall_status() {
+    if ! command -v ufw >/dev/null 2>&1; then
+        error "$(t ufw_not_found)"
+        return 1
+    fi
+    ufw status verbose
+}
+
+cli_remnanode() {
+    local action="${1:-}"
+    if (($#)); then shift; fi
+    if [[ -z "$action" ]]; then
+        remnanode_settings_menu
+        return 0
+    fi
+    case "$action" in
+        install|configure|setup) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; setup_remnanode ;;
+        status) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; remnanode_print_status ;;
+        start) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; remnanode_start ;;
+        stop) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; remnanode_stop ;;
+        restart) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; remnanode_restart ;;
+        logs) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; remnanode_logs ;;
+        update) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; remnanode_update ;;
+        help|-h|--help) show_help ;;
+        *) error "$(t cli_unknown_command) $action" || true; show_help; return 2 ;;
+    esac
+}
+
+cli_selfsteal() {
+    local action="${1:-}"
+    if (($#)); then shift; fi
+    if [[ -z "$action" ]]; then
+        selfsteal_settings_menu
+        return 0
+    fi
+    case "$action" in
+        install|configure|setup) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; setup_caddy_selfsteal ;;
+        status) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; selfsteal_print_status ;;
+        start) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; selfsteal_start ;;
+        stop) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; selfsteal_stop ;;
+        restart) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; selfsteal_restart ;;
+        logs) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; selfsteal_logs ;;
+        validate) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; selfsteal_validate_config ;;
+        cert|certificate) (($# == 0)) || { error "$(t cli_unexpected_arguments)"; return 1; }; selfsteal_print_certificate_details ;;
+        help|-h|--help) show_help ;;
+        *) error "$(t cli_unknown_command) $action" || true; show_help; return 2 ;;
+    esac
+}
+
+cli_firewall() {
+    local action="${1:-}"
+    if (($#)); then shift; fi
+    if [[ "$action" == "status" && $# -eq 0 ]]; then
+        firewall_status
+        return
+    fi
+    error "$(t cli_unknown_command) firewall ${action:-}" || true
+    show_help
+    return 2
+}
+
+dispatch_cli() {
+    local command="${1:-}"
+    if (($# == 0)); then
+        main
+        return
+    fi
+    if (($#)); then shift; fi
+
+    case "$command" in
+        version|--version|-v)
+            printf 'KARENET Server v%s\n' "$SCRIPT_VERSION"
+            ;;
+        help|--help|-h)
+            set_cli_language
+            show_help
+            ;;
+        update|self-update)
+            set_cli_language
+            self_update_script
+            ;;
+        check-updates)
+            set_cli_language
+            check_script_updates
+            ;;
+        remnanode)
+            set_cli_language
+            cli_remnanode "$@"
+            ;;
+        selfsteal)
+            set_cli_language
+            cli_selfsteal "$@"
+            ;;
+        firewall)
+            set_cli_language
+            cli_firewall "$@"
+            ;;
+        *)
+            set_cli_language
+            error "$(t cli_unknown_command) $command" || true
+            show_help
+            return 2
+            ;;
+    esac
+}
+
+# Execute the menu when no arguments are supplied; otherwise dispatch a CLI action.
+dispatch_cli "$@"
+

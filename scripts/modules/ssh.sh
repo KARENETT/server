@@ -1,6 +1,8 @@
 #!/bin/bash
 
 setup_ssh() {
+    local ssh_port backup_file
+    SSH_CONFIGURED_PORT=""
     log "=========================================="
     log "$(t ssh_title)"
     log "=========================================="
@@ -17,7 +19,8 @@ setup_ssh() {
     fi
 
     if [ -f /etc/ssh/sshd_config ]; then
-        cp /etc/ssh/sshd_config "/etc/ssh/sshd_config.backup.$(date +%Y%m%d_%H%M%S)"
+        backup_file="/etc/ssh/sshd_config.backup.$(date +%Y%m%d_%H%M%S)"
+        cp /etc/ssh/sshd_config "$backup_file"
 
         sed -i "s/^#*Port .*/Port $ssh_port/" /etc/ssh/sshd_config
         sed -i 's/^#*PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config
@@ -33,14 +36,20 @@ setup_ssh() {
         sed -i 's/^#*UseDNS .*/UseDNS no/' /etc/ssh/sshd_config
 
         if sshd -t; then
-            systemctl enable ssh
-            systemctl restart ssh && check_success "SSH перезапущен на порту $ssh_port (только ключи!)"
+            if ! systemctl enable ssh || ! systemctl restart ssh; then
+                cp -- "$backup_file" /etc/ssh/sshd_config || true
+                systemctl restart ssh >/dev/null 2>&1 || true
+                error "$(t ssh_restart_failed)"
+                return 1
+            fi
 
+            SSH_CONFIGURED_PORT="$ssh_port"
+            log "✓ SSH перезапущен на порту $ssh_port (только ключи!)"
             warning "$(t ssh_key_only)"
             warning "ssh -p $ssh_port user@IP"
         else
             error "$(t ssh_config_error)"
-            cp /etc/ssh/sshd_config.backup.* /etc/ssh/sshd_config 2>/dev/null || true
+            cp -- "$backup_file" /etc/ssh/sshd_config || true
             return 1
         fi
     else
