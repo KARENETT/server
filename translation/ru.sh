@@ -108,6 +108,10 @@ translate_ru() {
         caddy_docker_required) echo "Для установки нужен Docker Compose v2 (пункт 14)." ;;
         caddy_docker_daemon_required) echo "Демон Docker не запущен или недоступен." ;;
         caddy_validation_tools_required) echo "Для проверки портов нужна команда ss из пакета iproute2." ;;
+        caddy_ufw_required) echo "Для добавления правил портов self-steal необходим UFW." ;;
+        caddy_ufw_rules_failed) echo "Не удалось добавить UFW allow-правила для TCP/80, TCP/443 и TCP/9443." ;;
+        caddy_ufw_rules_added) echo "В UFW добавлены правила allow для TCP/80, TCP/443 и TCP/9443." ;;
+
         caddy_dns_notice) echo "Оба домена должны указывать прямо на этот сервер без прокси; для ACME нужен доступный TCP/80." ;;
         caddy_ports_notice) echo "NGINX будет принимать TCP/443 и передавать raw в Xray на 127.0.0.1:10443, а XHTTP — на 127.0.0.1:10444; используется PROXY protocol." ;;
         caddy_asset_missing) echo "Не найден файл сайта self-steal." ;;

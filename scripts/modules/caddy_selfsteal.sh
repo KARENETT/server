@@ -187,6 +187,11 @@ setup_caddy_selfsteal() {
         error "$(t caddy_validation_tools_required)"
         return 1
     fi
+    if ! command -v ufw >/dev/null 2>&1; then
+        error "$(t caddy_ufw_required)"
+        return 1
+    fi
+
     if [[ ! -f "$asset_path" ]]; then
         error "$(t caddy_asset_missing)"
         return 1
@@ -272,6 +277,13 @@ EOF
             return 0
         fi
     fi
+    if ! ufw allow 80/tcp comment 'self-steal: HTTP/ACME' ||
+        ! ufw allow 443/tcp comment 'self-steal: NGINX' ||
+        ! ufw allow 9443/tcp comment 'self-steal: Caddy'; then
+        error "$(t caddy_ufw_rules_failed)"
+        return 1
+    fi
+    info "$(t caddy_ufw_rules_added)"
 
     if command -v systemctl >/dev/null 2>&1; then
         systemctl is-active --quiet caddy && system_caddy_active=1 || true

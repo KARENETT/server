@@ -107,6 +107,10 @@ translate_en() {
         caddy_docker_required) echo "Docker Compose v2 is required (menu option 14)." ;;
         caddy_docker_daemon_required) echo "The Docker daemon is unavailable." ;;
         caddy_validation_tools_required) echo "The iproute2 ss command is required to verify listeners." ;;
+        caddy_ufw_required) echo "UFW is required to add self-steal port rules." ;;
+        caddy_ufw_rules_failed) echo "Failed to add UFW allow rules for TCP/80, TCP/443, and TCP/9443." ;;
+        caddy_ufw_rules_added) echo "UFW allow rules added for TCP/80, TCP/443, and TCP/9443." ;;
+
         caddy_dns_notice) echo "Both domains must point directly to this server without a proxy; TCP/80 must be reachable for ACME." ;;
         caddy_ports_notice) echo "NGINX accepts TCP/443 and sends raw to Xray at 127.0.0.1:10443 and XHTTP to 127.0.0.1:10444; PROXY protocol is enabled." ;;
         caddy_asset_missing) echo "The self-steal site asset was not found." ;;
