@@ -129,7 +129,13 @@ translate_ru() {
         remnanode_docker_required) echo "Для установки нужен Docker Compose v2 (пункт 14)." ;;
         remnanode_docker_daemon_required) echo "Демон Docker не запущен или недоступен." ;;
         remnanode_validation_tools_required) echo "Для проверки IP, SECRET_KEY и порта ноды нужны python3, base64 и ss." ;;
-        remnanode_zapret_missing) echo "Не найден обязательный файл данных zapret.dat:" ;;
+        remnanode_log_directory_failed) echo "Не удалось создать каталог /var/log/remnanode." ;;
+        remnanode_logrotate_apt_required) echo "Для установки logrotate требуется apt-get." ;;
+        remnanode_logrotate_installing) echo "Установка logrotate..." ;;
+        remnanode_logrotate_install_failed) echo "Не удалось установить logrotate." ;;
+        remnanode_logrotate_config_write_failed) echo "Не удалось записать /etc/logrotate.d/remnanode." ;;
+        remnanode_logrotate_test_failed) echo "logrotate отклонил конфигурацию RemnaNode." ;;
+        remnanode_logrotate_ready) echo "Ротация логов RemnaNode настроена; принудительная проверка прошла." ;;
         remnanode_existing_container_warning) echo "Найден remnanode-контейнер вне Compose-проекта /opt/remnanode." ;;
         remnanode_replace_prompt) echo "Остановить и заменить существующий контейнер? Будет короткий перерыв (y/N):" ;;
         remnanode_cancelled) echo "Установка отменена." ;;
@@ -150,7 +156,8 @@ translate_ru() {
         remnanode_start_failed) echo "RemnaNode не запустился или не слушает выбранный TCP-порт." ;;
         remnanode_previous_container_cleanup_failed) echo "Старый контейнер RemnaNode оставлен для ручной очистки." ;;
         remnanode_old_firewall_rule_cleanup_failed) echo "Старое правило UFW не удалено; проверьте его вручную." ;;
-        remnanode_done) echo "RemnaNode запущен; выбранный TCP-порт доступен только с IP панели." ;;
+        remnanode_done) echo "RemnaNode запущен; TCP-порт доступен только с IP панели, ротация логов настроена." ;;
+
         psiphon_full_install_prompt) echo "Установить Psiphon для региона DE в рамках полной настройки? (y/N):" ;;
         psiphon_temp_failed) echo "Не удалось создать временный файл установщика Psiphon." ;;
         psiphon_installing) echo "Установка Psiphon (регион DE)..." ;;

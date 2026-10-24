@@ -128,7 +128,13 @@ translate_en() {
         remnanode_docker_required) echo "Docker Compose v2 is required (menu option 14)." ;;
         remnanode_docker_daemon_required) echo "The Docker daemon is unavailable." ;;
         remnanode_validation_tools_required) echo "python3, base64, and ss are required to validate the panel IP, SECRET_KEY, and node listener." ;;
-        remnanode_zapret_missing) echo "Required zapret.dat data file not found:" ;;
+        remnanode_log_directory_failed) echo "Failed to create /var/log/remnanode." ;;
+        remnanode_logrotate_apt_required) echo "apt-get is required to install logrotate." ;;
+        remnanode_logrotate_installing) echo "Installing logrotate..." ;;
+        remnanode_logrotate_install_failed) echo "Failed to install logrotate." ;;
+        remnanode_logrotate_config_write_failed) echo "Failed to write /etc/logrotate.d/remnanode." ;;
+        remnanode_logrotate_test_failed) echo "logrotate rejected the RemnaNode configuration." ;;
+        remnanode_logrotate_ready) echo "RemnaNode log rotation is configured and the forced check passed." ;;
         remnanode_existing_container_warning) echo "Found a remnanode container outside the /opt/remnanode Compose project." ;;
         remnanode_replace_prompt) echo "Stop and replace the existing container? This causes brief downtime (y/N):" ;;
         remnanode_cancelled) echo "Installation cancelled." ;;
@@ -149,7 +155,8 @@ translate_en() {
         remnanode_start_failed) echo "RemnaNode failed to start or listen on the selected TCP port." ;;
         remnanode_previous_container_cleanup_failed) echo "The old RemnaNode container was left for manual cleanup." ;;
         remnanode_old_firewall_rule_cleanup_failed) echo "The old UFW rule was not removed; inspect it manually." ;;
-        remnanode_done) echo "RemnaNode is running; the selected TCP port is restricted to the panel IP." ;;
+        remnanode_done) echo "RemnaNode is running; the selected TCP port is restricted to the panel IP and log rotation is configured." ;;
+
         psiphon_full_install_prompt) echo "Install Psiphon for region DE as part of full setup? (y/N):" ;;
         psiphon_temp_failed) echo "Failed to create a temporary file for the Psiphon installer." ;;
         psiphon_installing) echo "Installing Psiphon (region DE)..." ;;

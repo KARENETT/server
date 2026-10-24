@@ -28,9 +28,50 @@ services:
       CUSTOM_CORE_URL: "https://github.com/MakostaDev/UwuRay/releases/latest/download/Xray-linux-64"
     volumes:
       - /var/log/remnanode:/var/log/remnanode
-      - /opt/remnawave/xray/share/zapret.dat:/usr/local/bin/zapret.dat
       - /dev/shm:/dev/shm
 EOF
+}
+
+setup_remnanode_logrotate() {
+    local config_file="/etc/logrotate.d/remnanode"
+
+    if ! command -v logrotate >/dev/null 2>&1; then
+        if ! command -v apt-get >/dev/null 2>&1; then
+            error "$(t remnanode_logrotate_apt_required)"
+            return 1
+        fi
+
+        info "$(t remnanode_logrotate_installing)"
+        if ! apt-get update || ! DEBIAN_FRONTEND=noninteractive apt-get install -y logrotate; then
+            error "$(t remnanode_logrotate_install_failed)"
+            return 1
+        fi
+    fi
+
+    if ! install -d -o root -g root -m 755 /etc/logrotate.d; then
+        error "$(t remnanode_logrotate_config_write_failed)"
+        return 1
+    fi
+    if ! write_file_atomically "$config_file" 644 <<'EOF'
+/var/log/remnanode/*.log {
+    size 50M
+    rotate 5
+    compress
+    missingok
+    notifempty
+    copytruncate
+}
+EOF
+    then
+        error "$(t remnanode_logrotate_config_write_failed)"
+        return 1
+    fi
+    if ! logrotate -vf "$config_file"; then
+        error "$(t remnanode_logrotate_test_failed)"
+        return 1
+    fi
+
+    info "$(t remnanode_logrotate_ready)"
 }
 
 remnanode_rollback_panel_rule() {
@@ -71,7 +112,6 @@ setup_remnanode() {
     local existing_project=""
     local previous_container=""
     local replace_existing=0
-    local zapret_file="/opt/remnawave/xray/share/zapret.dat"
     local compose_file="$REMNANODE_DIR/docker-compose.yml"
     local env_file="$REMNANODE_DIR/.env"
     local attempt
@@ -95,10 +135,6 @@ setup_remnanode() {
     fi
     if ! command -v python3 >/dev/null 2>&1 || ! command -v base64 >/dev/null 2>&1 || ! command -v ss >/dev/null 2>&1; then
         error "$(t remnanode_validation_tools_required)"
-        return 1
-    fi
-    if [[ ! -f "$zapret_file" ]]; then
-        error "$(t remnanode_zapret_missing) $zapret_file"
         return 1
     fi
 
@@ -145,6 +181,13 @@ setup_remnanode() {
         fi
         warning "$(t remnanode_node_port_invalid)"
     done
+    if ! install -d -o root -g root -m 755 "$REMNANODE_DIR" /var/log/remnanode; then
+        error "$(t remnanode_log_directory_failed)"
+        return 1
+    fi
+    if ! setup_remnanode_logrotate; then
+        return 1
+    fi
 
     read -r -s -p "${PROMPT_PREFIX} $(t remnanode_secret_prompt) " secret_key || {
         printf '\n'
@@ -157,7 +200,6 @@ setup_remnanode() {
         return 1
     fi
 
-    install -d -o root -g root -m 755 "$REMNANODE_DIR" /var/log/remnanode
     if ! write_file_atomically "$compose_file" 644 <<EOF
 $(render_remnanode_compose)
 EOF
