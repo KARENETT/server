@@ -10,13 +10,13 @@ setup_warp_native() {
         return 1
     fi
 
-    if ! confirm_yes_no "$(t remote_install_confirm) WARP NATIVE? (y/N):"; then
+    if ! confirm_yes_no "$(t remote_install_confirm) WARP NATIVE? [да/нет; по умолчанию — нет]"; then
         warning "$(t remote_install_cancelled)"
         return 0
     fi
 
-    info "URL: https://raw.githubusercontent.com/distillium/warp-native/main/install.sh"
-    log "Установка WARP NATIVE by distillium..."
+    info "Адрес установщика: https://raw.githubusercontent.com/distillium/warp-native/main/install.sh"
+    log "Установка WARP NATIVE от distillium..."
     if bash <(curl -fsSL "https://raw.githubusercontent.com/distillium/warp-native/main/install.sh"); then
         check_success "WARP NATIVE установлен"
     else

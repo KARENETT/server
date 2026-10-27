@@ -10,9 +10,11 @@ case "$SCRIPT_SOURCE" in
     *) SCRIPT_SOURCE="$(readlink -f -- "$SCRIPT_SOURCE" 2>/dev/null || printf '%s' "$SCRIPT_SOURCE")" ;;
 esac
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" 2>/dev/null && pwd || pwd)"
-SCRIPT_VERSION="1.2.0"
+SCRIPT_VERSION="1.3.0"
 
-LANGUAGE="${LANGUAGE:-}"
+LANGUAGE="ru"
+export LANGUAGE
+unset BULK_INSTALL INTERNET_CHECK_PASSED
 SSH_CONFIGURED_PORT=""
 INSTALL_DIR="/opt/karenet-setup"
 SHORTCUT_PATH="/usr/local/bin/karenet-setup"
@@ -42,8 +44,8 @@ RUNTIME_FILES=(
     "scripts/modules/remnanode.sh"
     "scripts/modules/psiphon.sh"
     "scripts/assets/selfsteal/index.html"
+    "scripts/assets/selfsteal/speedtest/index.html"
     "translation/ru.sh"
-    "translation/en.sh"
 )
 
 fetch_runtime_file() {
@@ -72,7 +74,7 @@ download_runtime_files() {
 
     for file in "${RUNTIME_FILES[@]}"; do
         if ! fetch_runtime_file "$file" "$target_dir/$file"; then
-            echo "[ERROR] Не удалось скачать или проверить: $file"
+            echo "[ОШИБКА] Не удалось скачать или проверить: $file"
             return 1
         fi
     done
@@ -80,7 +82,7 @@ download_runtime_files() {
 
 # Доступ только для суперпользователя
 if [[ $EUID -ne 0 ]]; then
-    echo "[ERROR] Требуются права суперпользователя. Запустите: sudo bash setup.sh"
+    echo "[ОШИБКА] Требуются права суперпользователя. Запустите: sudo bash setup.sh"
     exit 1
 fi
 
@@ -127,7 +129,6 @@ ensure_global_install "$@"
 source "$SCRIPT_DIR/scripts/config.sh"
 source "$SCRIPT_DIR/scripts/utils.sh"
 source "$SCRIPT_DIR/translation/ru.sh"
-source "$SCRIPT_DIR/translation/en.sh"
 
 BRIGHT_GREEN=$'\033[1;92m'
 GRAY=$'\033[0;90m'
@@ -158,31 +159,47 @@ source "$MODULES_DIR/psiphon.sh"
 
 # Функция установки всего
 install_all() {
+    local BULK_INSTALL=1
+    local INTERNET_CHECK_PASSED=0
+    local DEBIAN_FRONTEND=noninteractive
+    export DEBIAN_FRONTEND
+
     log "=========================================="
     log "$(t install_all_title)"
     log "=========================================="
-
+    prompt_ssh_port || return 1
+    info "$(t install_all_scope_notice)"
     check_internet || return 1
 
-    update_system
-    setup_xanmod
-    setup_swap
-    setup_ulimits
-    install_packages
-    setup_ssh
-    setup_firewall "$SSH_CONFIGURED_PORT" "skip-panel-prompt"
-    setup_trafficguard
-    setup_ds_guard
-    setup_zsh
-    setup_nodejs
-    setup_uv
-    setup_docker
-    setup_sysctl_hardening
-    if confirm_yes_no "$(t psiphon_full_install_prompt)"; then
-        setup_psiphon
+    update_system || return 1
+    setup_xanmod || return 1
+    setup_swap || return 1
+    setup_ulimits || return 1
+    install_packages || return 1
+    setup_ssh "$SSH_CONFIGURED_PORT" || return 1
+    setup_firewall "$SSH_CONFIGURED_PORT" "skip-panel-prompt" || return 1
+    if is_trafficguard_installed; then
+        info "$(t opt_10_installed)"
+    else
+        setup_trafficguard || return 1
     fi
+    if is_ds_guard_installed; then
+        info "$(t opt_23_installed)"
+    else
+        setup_ds_guard || return 1
+    fi
+    setup_zsh || return 1
+    setup_nodejs || return 1
+    setup_uv || return 1
+    setup_docker || return 1
+    setup_sysctl_hardening || return 1
+    setup_psiphon || return 1
 
-    mkdir -p ~/projects ~/scripts ~/downloads ~/backup && check_success "$(t install_dirs_created)"
+    if ! mkdir -p ~/projects ~/scripts ~/downloads ~/backup; then
+        error "$(t install_dirs_failed)"
+        return 1
+    fi
+    check_success "$(t install_dirs_created)" || return 1
 
     log "=========================================="
     log "$(t install_all_done)"
@@ -192,20 +209,14 @@ install_all() {
     echo "1. $(t post_step_shell)"
     echo "2. $(t post_step_docker)"
     echo ""
-    if confirm_yes_no "$(t reboot_confirm)"; then
-        log "$(t rebooting)"
-        reboot
-    else
-        log "$(t reboot_cancelled)"
-        info "$(t apply_changes_hint)"
-    fi
+    info "$(t install_all_reboot_notice)"
 }
 
 selective_install() {
     local selected raw item
     local -A seen=()
 
-    clear
+    clear_screen
     print_logo
     echo -e "${GRAY}────────────────────────────────────────────────────────────────────────────────${NC}"
     echo ""
@@ -254,25 +265,25 @@ selective_install() {
         [[ -n "${seen[$choice]:-}" ]] && continue
         seen[$choice]=1
         case "$choice" in
-            3) add_user ;;
-            4) update_system ;;
-            5) install_packages ;;
-            6) toggle_swap ;;
-            7) toggle_ulimits ;;
-            8) setup_ssh ;;
-            9) toggle_firewall ;;
-            10) setup_trafficguard ;;
-            23) setup_ds_guard ;;
-            11) setup_zsh ;;
-            12) setup_nodejs ;;
-            13) setup_uv ;;
-            14) setup_docker ;;
-            15) setup_xanmod ;;
-            16) toggle_sysctl_hardening ;;
-            21) setup_warp_native ;;
-            24) setup_caddy_selfsteal ;;
-            26) setup_remnanode ;;
-            25) setup_psiphon ;;
+            3) add_user || return 1 ;;
+            4) update_system || return 1 ;;
+            5) install_packages || return 1 ;;
+            6) toggle_swap || return 1 ;;
+            7) toggle_ulimits || return 1 ;;
+            8) setup_ssh || return 1 ;;
+            9) toggle_firewall || return 1 ;;
+            10) setup_trafficguard || return 1 ;;
+            23) setup_ds_guard || return 1 ;;
+            11) setup_zsh || return 1 ;;
+            12) setup_nodejs || return 1 ;;
+            13) setup_uv || return 1 ;;
+            14) setup_docker || return 1 ;;
+            15) setup_xanmod || return 1 ;;
+            16) toggle_sysctl_hardening || return 1 ;;
+            21) setup_warp_native || return 1 ;;
+            24) setup_caddy_selfsteal || return 1 ;;
+            26) setup_remnanode || return 1 ;;
+            25) setup_psiphon || return 1 ;;
             *) warning "$(t selective_invalid): $item" ;;
         esac
     done
@@ -483,36 +494,9 @@ self_update_script() {
 
 
 
-set_language() {
-    if [[ -n "$LANGUAGE" ]]; then
-        return
-    fi
-
-    if [[ "${LANG:-}" == ru* || "${LC_ALL:-}" == ru* ]]; then
-        LANGUAGE="ru"
-    else
-        LANGUAGE="en"
-    fi
-
-    clear
-    echo "🌐 Select language / Выберите язык:"
-    echo " 1) 🇷🇺 Русский"
-    echo " 2) 🇬🇧 English"
-    read -rp "${PROMPT_PREFIX} Choice [1/2, default ${LANGUAGE^^}]: " lang_choice
-
-    case "$lang_choice" in
-        1) LANGUAGE="ru" ;;
-        2) LANGUAGE="en" ;;
-    esac
-}
 
 t() {
-    local key="$1"
-    if [[ "$LANGUAGE" == "ru" ]]; then
-        translate_ru "$key"
-    else
-        translate_en "$key"
-    fi
+    translate_ru "$1"
 }
 
 print_logo() {
@@ -533,7 +517,7 @@ print_logo() {
 EOF
 
     mapfile -t title_lines << EOF
-KARENET SERVER SETUP
+KARENET — настройка сервера
 $(t version_label) v${SCRIPT_VERSION}
 https://github.com/KARENETT/server
 EOF
@@ -555,9 +539,15 @@ menu_divider() {
     echo -e "${GRAY}────────────────────────────────────────────────────────────${NC}"
 }
 
+clear_screen() {
+    if [[ -t 1 && -n "${TERM:-}" && "$TERM" != "dumb" ]]; then
+        printf '\033[H\033[2J'
+    fi
+}
+
 menu_header() {
     local title="$1"
-    clear
+    clear_screen
     print_logo
     menu_divider
     echo -e "${BOLD}${title}${NC}"
@@ -565,9 +555,9 @@ menu_header() {
 }
 
 menu_container_state() {
-    local container="$1" state
+    local container="$1" docker_available="${2:-0}" state
 
-    if ! command -v docker >/dev/null 2>&1 || ! docker info >/dev/null 2>&1; then
+    if [[ "$docker_available" != "1" ]]; then
         printf 'unavailable'
         return 0
     fi
@@ -585,8 +575,8 @@ menu_container_state() {
 }
 
 print_service_status() {
-    local label_key="$1" container="$2" state color
-    state="$(menu_container_state "$container")"
+    local label_key="$1" container="$2" docker_available="$3" state color
+    state="$(menu_container_state "$container" "$docker_available")"
 
     case "$state" in
         running) color="$GREEN" ;;
@@ -600,12 +590,17 @@ print_service_status() {
 }
 
 show_menu() {
+    local docker_available=1
+
+    if ! command -v docker >/dev/null 2>&1 || ! docker info >/dev/null 2>&1; then
+        docker_available=0
+    fi
     menu_header "$(t main_menu_title)"
 
     echo -e "${MAGENTA}$(t menu_status_title)${NC}"
-    print_service_status status_remnanode_label remnanode
-    print_service_status status_caddy_label caddy
-    print_service_status status_nginx_label nginx
+    print_service_status status_remnanode_label remnanode "$docker_available"
+    print_service_status status_caddy_label caddy "$docker_available"
+    print_service_status status_nginx_label nginx "$docker_available"
     echo ""
     menu_divider
 
@@ -658,41 +653,42 @@ show_server_settings_menu() {
     echo ""
 }
 
+run_menu_action_and_pause() {
+    "$@" || return 1
+    read -rp "${PROMPT_PREFIX} $(t press_enter)" || return 1
+}
+
 server_settings_menu() {
     local choice
     while true; do
         show_server_settings_menu
-        read -rp "${PROMPT_PREFIX} $(t choose_server_item) " choice
+        read -rp "${PROMPT_PREFIX} $(t choose_server_item) " choice || return 1
         echo ""
 
         case "$choice" in
-            1) add_user ;;
-            2) update_system ;;
-            3) install_packages ;;
-            4) toggle_swap ;;
-            5) toggle_ulimits ;;
-            6) setup_ssh ;;
-            7) toggle_firewall ;;
-            8) setup_trafficguard ;;
-            9) setup_ds_guard ;;
-            10) setup_zsh ;;
-            11) setup_nodejs ;;
-            12) setup_uv ;;
-            13) setup_docker ;;
-            14) setup_xanmod ;;
-            15) toggle_sysctl_hardening ;;
-            16) setup_warp_native ;;
-            17) setup_psiphon ;;
-            18) check_script_updates ;;
-            19) self_update_script --restart-menu ;;
-            20) uninstall_script ;;
-            0) return ;;
-            *) error "$(t invalid_choice)"; read -rp "${PROMPT_PREFIX} $(t press_enter)"; continue ;;
+            1) run_menu_action_and_pause add_user || return 1 ;;
+            2) run_menu_action_and_pause update_system || return 1 ;;
+            3) run_menu_action_and_pause install_packages || return 1 ;;
+            4) run_menu_action_and_pause toggle_swap || return 1 ;;
+            5) run_menu_action_and_pause toggle_ulimits || return 1 ;;
+            6) run_menu_action_and_pause setup_ssh || return 1 ;;
+            7) run_menu_action_and_pause toggle_firewall || return 1 ;;
+            8) run_menu_action_and_pause setup_trafficguard || return 1 ;;
+            9) run_menu_action_and_pause setup_ds_guard || return 1 ;;
+            10) run_menu_action_and_pause setup_zsh || return 1 ;;
+            11) run_menu_action_and_pause setup_nodejs || return 1 ;;
+            12) run_menu_action_and_pause setup_uv || return 1 ;;
+            13) run_menu_action_and_pause setup_docker || return 1 ;;
+            14) run_menu_action_and_pause setup_xanmod || return 1 ;;
+            15) run_menu_action_and_pause toggle_sysctl_hardening || return 1 ;;
+            16) run_menu_action_and_pause setup_warp_native || return 1 ;;
+            17) run_menu_action_and_pause setup_psiphon || return 1 ;;
+            18) run_menu_action_and_pause check_script_updates || return 1 ;;
+            19) run_menu_action_and_pause self_update_script --restart-menu || return 1 ;;
+            20) run_menu_action_and_pause uninstall_script || return 1 ;;
+            0) return 0 ;;
+            *) error "$(t invalid_choice)" || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" || return 1 ;;
         esac
-
-        if [[ "$choice" != "0" ]]; then
-            read -rp "${PROMPT_PREFIX} $(t press_enter)"
-        fi
     done
 }
 
@@ -702,7 +698,7 @@ show_remnanode_menu() {
     menu_header "$(t remnanode_menu_title)"
     state="$(remnanode_service_state)"
     echo -e "${MAGENTA}$(t menu_status_title)${NC}"
-    remnanode_print_status
+    remnanode_print_status "$state"
     echo ""
     menu_divider
 
@@ -756,18 +752,18 @@ remnanode_settings_menu() {
     local choice
     while true; do
         show_remnanode_menu
-        read -rp "${PROMPT_PREFIX} $(t choose_remnanode_item) " choice
+        read -rp "${PROMPT_PREFIX} $(t choose_remnanode_item) " choice || return 1
         echo ""
         case "$choice" in
-            1) setup_remnanode || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            2) remnanode_start || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            3) remnanode_stop || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            4) remnanode_restart || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            5) remnanode_print_status || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            6) remnanode_logs || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            7) remnanode_update || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            0) return ;;
-            *) error "$(t invalid_choice)" || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            1) run_menu_action_and_pause setup_remnanode || return 1 ;;
+            2) run_menu_action_and_pause remnanode_start || return 1 ;;
+            3) run_menu_action_and_pause remnanode_stop || return 1 ;;
+            4) run_menu_action_and_pause remnanode_restart || return 1 ;;
+            5) run_menu_action_and_pause remnanode_print_status || return 1 ;;
+            6) run_menu_action_and_pause remnanode_logs || return 1 ;;
+            7) run_menu_action_and_pause remnanode_update || return 1 ;;
+            0) return 0 ;;
+            *) error "$(t invalid_choice)" || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" || return 1 ;;
         esac
     done
 }
@@ -779,7 +775,7 @@ show_selfsteal_menu() {
     menu_header "$(t selfsteal_menu_title)"
     state="$(selfsteal_service_state)"
     echo -e "${MAGENTA}$(t menu_status_title)${NC}"
-    selfsteal_print_status
+    selfsteal_print_status "$state"
     echo ""
     menu_divider
 
@@ -838,19 +834,19 @@ selfsteal_settings_menu() {
     local choice
     while true; do
         show_selfsteal_menu
-        read -rp "${PROMPT_PREFIX} $(t choose_selfsteal_item) " choice
+        read -rp "${PROMPT_PREFIX} $(t choose_selfsteal_item) " choice || return 1
         echo ""
         case "$choice" in
-            1) setup_caddy_selfsteal || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            2) selfsteal_start || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            3) selfsteal_stop || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            4) selfsteal_restart || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            5) selfsteal_print_status || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            6) selfsteal_logs || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            7) selfsteal_validate_config || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            8) selfsteal_print_certificate_details || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            0) return ;;
-            *) error "$(t invalid_choice)" || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            1) run_menu_action_and_pause setup_caddy_selfsteal || return 1 ;;
+            2) run_menu_action_and_pause selfsteal_start || return 1 ;;
+            3) run_menu_action_and_pause selfsteal_stop || return 1 ;;
+            4) run_menu_action_and_pause selfsteal_restart || return 1 ;;
+            5) run_menu_action_and_pause selfsteal_print_status || return 1 ;;
+            6) run_menu_action_and_pause selfsteal_logs || return 1 ;;
+            7) run_menu_action_and_pause selfsteal_validate_config || return 1 ;;
+            8) run_menu_action_and_pause selfsteal_print_certificate_details || return 1 ;;
+            0) return 0 ;;
+            *) error "$(t invalid_choice)" || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" || return 1 ;;
         esac
     done
 }
@@ -859,35 +855,34 @@ selfsteal_settings_menu() {
 
 main() {
     local choice
-    set_language
     log "=========================================="
     log "$(t startup_title)"
     log "=========================================="
     while true; do
         show_menu
-        read -rp "${PROMPT_PREFIX} $(t choose_item) " choice
+        read -rp "${PROMPT_PREFIX} $(t choose_item) " choice || return 1
         echo ""
         case "$choice" in
-            1) server_settings_menu ;;
-            2) remnanode_settings_menu ;;
-            3) selfsteal_settings_menu ;;
-            4) install_all; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
-            5) selective_install; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            1) server_settings_menu || continue ;;
+            2) remnanode_settings_menu || continue ;;
+            3) selfsteal_settings_menu || continue ;;
+            4)
+                if install_all; then
+                    read -rp "${PROMPT_PREFIX} $(t press_enter)" || return 1
+                fi
+                ;;
+            5)
+                if selective_install; then
+                    read -rp "${PROMPT_PREFIX} $(t press_enter)" || return 1
+                fi
+                ;;
             0) log "$(t exit_log)"; exit 0 ;;
-            *) error "$(t invalid_choice)"; read -rp "${PROMPT_PREFIX} $(t press_enter)" ;;
+            *) error "$(t invalid_choice)" || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" || return 1 ;;
         esac
     done
 }
 
 
-set_cli_language() {
-    [[ -n "$LANGUAGE" ]] && return 0
-    if [[ "${LC_ALL:-${LANG:-}}" == ru* ]]; then
-        LANGUAGE="ru"
-    else
-        LANGUAGE="en"
-    fi
-}
 
 show_help() {
     echo "$(t cli_usage_title)"
@@ -911,7 +906,9 @@ cli_remnanode() {
     local action="${1:-}"
     if (($#)); then shift; fi
     if [[ -z "$action" ]]; then
-        remnanode_settings_menu
+        if ! remnanode_settings_menu; then
+            main
+        fi
         return 0
     fi
     case "$action" in
@@ -931,7 +928,9 @@ cli_selfsteal() {
     local action="${1:-}"
     if (($#)); then shift; fi
     if [[ -z "$action" ]]; then
-        selfsteal_settings_menu
+        if ! selfsteal_settings_menu; then
+            main
+        fi
         return 0
     fi
     case "$action" in
@@ -970,34 +969,27 @@ dispatch_cli() {
 
     case "$command" in
         version|--version|-v)
-            printf 'KARENET Server v%s\n' "$SCRIPT_VERSION"
+            printf 'KARENET — версия %s\n' "$SCRIPT_VERSION"
             ;;
         help|--help|-h)
-            set_cli_language
             show_help
             ;;
         update|self-update)
-            set_cli_language
             self_update_script
             ;;
         check-updates)
-            set_cli_language
             check_script_updates
             ;;
         remnanode)
-            set_cli_language
             cli_remnanode "$@"
             ;;
         selfsteal)
-            set_cli_language
             cli_selfsteal "$@"
             ;;
         firewall)
-            set_cli_language
             cli_firewall "$@"
             ;;
         *)
-            set_cli_language
             error "$(t cli_unknown_command) $command" || true
             show_help
             return 2

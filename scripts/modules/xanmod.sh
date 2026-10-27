@@ -68,12 +68,9 @@ setup_xanmod() {
     fi
 
     info "Будет установлен пакет: $xanmod_package"
-    info "Codename системы: $distro_codename"
+    info "Кодовое имя системы: $distro_codename"
     warning "$(t xanmod_reboot_required)"
-    echo ""
-    read -rp "${PROMPT_PREFIX} $(t xanmod_confirm) " -n 1
-    echo ""
-    if [[ $REPLY =~ ^[Nn]$ ]]; then
+    if ! confirm_yes_no "$(t xanmod_confirm)" yes; then
         warning "$(t xanmod_cancelled)"
         return 0
     fi

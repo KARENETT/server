@@ -74,6 +74,15 @@ EOF
     info "$(t remnanode_logrotate_ready)"
 }
 
+remnanode_enable_firewall() {
+    warning "$(t remnanode_ufw_enable_warning)"
+    if ! ufw --force enable >/dev/null 2>&1; then
+        error "$(t remnanode_ufw_enable_failed)"
+        return 1
+    fi
+    info "$(t remnanode_ufw_enabled)"
+}
+
 remnanode_rollback_panel_rule() {
     local old_panel_ip="$1"
     local old_panel_port="$2"
@@ -285,6 +294,12 @@ setup_remnanode() {
     fi
 
 
+    if ! remnanode_enable_firewall; then
+        remnanode_rollback_panel_rule "$old_panel_ip" "$old_panel_port" "$panel_ip" "$node_port"
+        remnanode_restore_setup_files "$stage_dir" "$compose_file" "$env_file" || true
+        return 1
+    fi
+
     if (( replace_existing )); then
         previous_container="remnanode-previous-$(date +%Y%m%d%H%M%S)-$$"
         if ! docker stop remnanode >/dev/null || ! docker rename remnanode "$previous_container"; then
@@ -472,9 +487,9 @@ remnanode_read_xray_version() {
 }
 
 remnanode_print_status() {
-    local state port image node_version xray_version
+    local state="${1:-}" port image node_version xray_version
 
-    state="$(remnanode_service_state)"
+    [[ -n "$state" ]] || state="$(remnanode_service_state)"
     printf '  %s %s\n' "$(t remnanode_state_label)" "$(t "status_${state}")"
     [[ "$state" != "missing" && "$state" != "unavailable" ]] || return 0
 

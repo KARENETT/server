@@ -1,22 +1,38 @@
 #!/bin/bash
 
+prompt_ssh_port() {
+    local ssh_port_input
+
+    while true; do
+        read -rp "${PROMPT_PREFIX} $(t ssh_port_prompt) " ssh_port_input || return 1
+        ssh_port_input="${ssh_port_input:-33556}"
+        if is_valid_tcp_port "$ssh_port_input" && ((10#$ssh_port_input >= 1024)); then
+            SSH_CONFIGURED_PORT=$((10#$ssh_port_input))
+            return 0
+        fi
+        warning "$(t ssh_invalid_port)"
+    done
+}
+
 setup_ssh() {
-    local ssh_port backup_file
-    SSH_CONFIGURED_PORT=""
+    local ssh_port="${1:-}" backup_file
+
+    if [[ -z "$ssh_port" ]]; then
+        prompt_ssh_port || return 1
+        ssh_port="$SSH_CONFIGURED_PORT"
+    elif ! is_valid_tcp_port "$ssh_port" || ((10#$ssh_port < 1024)); then
+        error "$(t ssh_invalid_port)"
+        return 1
+    else
+        ssh_port=$((10#$ssh_port))
+        SSH_CONFIGURED_PORT="$ssh_port"
+    fi
+
     log "=========================================="
     log "$(t ssh_title)"
     log "=========================================="
 
     mkdir -p /run/sshd
-
-    echo ""
-    read -rp "${PROMPT_PREFIX} $(t ssh_port_prompt) " ssh_port
-    ssh_port=${ssh_port:-33556}
-
-    if ! [[ "$ssh_port" =~ ^[0-9]+$ ]] || [ "$ssh_port" -lt 1024 ] || [ "$ssh_port" -gt 65535 ]; then
-        error "$(t ssh_invalid_port)"
-        ssh_port=33556
-    fi
 
     if [ -f /etc/ssh/sshd_config ]; then
         backup_file="/etc/ssh/sshd_config.backup.$(date +%Y%m%d_%H%M%S)"
@@ -46,7 +62,7 @@ setup_ssh() {
             SSH_CONFIGURED_PORT="$ssh_port"
             log "✓ SSH перезапущен на порту $ssh_port (только ключи!)"
             warning "$(t ssh_key_only)"
-            warning "ssh -p $ssh_port user@IP"
+            warning "Пример подключения: ssh -p $ssh_port user@IP"
         else
             error "$(t ssh_config_error)"
             cp -- "$backup_file" /etc/ssh/sshd_config || true

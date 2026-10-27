@@ -18,7 +18,7 @@ setup_ds_guard() {
         return 1
     fi
 
-    if ! confirm_yes_no "$(t remote_install_confirm) ds-guard? (y/N):"; then
+    if ! confirm_yes_no "$(t remote_install_confirm) ds-guard? [да/нет; по умолчанию — нет]"; then
         warning "$(t remote_install_cancelled)"
         return 0
     fi
@@ -26,7 +26,7 @@ setup_ds_guard() {
     tmp_dir="$(mktemp -d /tmp/ds-guard.XXXXXX)" || return 1
     ds_guard_bin="$tmp_dir/ds-guard"
 
-    info "URL: $DS_GUARD_URL"
+    info "Адрес установщика: $DS_GUARD_URL"
     log "$(t ds_guard_installing)"
 
     if curl -fsSL "$DS_GUARD_URL" -o "$ds_guard_bin" && chmod +x "$ds_guard_bin" && "$ds_guard_bin"; then

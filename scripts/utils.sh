@@ -7,18 +7,18 @@ log() {
 }
 
 error() {
-    local message="[ERROR] $1"
+    local message="[ОШИБКА] $1"
     echo -e "${RED}${message}${NC}"
     return 1
 }
 
 warning() {
-    local message="[WARNING] $1"
+    local message="[ПРЕДУПРЕЖДЕНИЕ] $1"
     echo -e "${YELLOW}${message}${NC}"
 }
 
 info() {
-    local message="[INFO] $1"
+    local message="[ИНФОРМАЦИЯ] $1"
     echo -e "${BLUE}${message}${NC}"
 }
 
@@ -58,10 +58,17 @@ retry_command() {
 
 # Проверка интернет-соединения
 check_internet() {
+    if [[ "${BULK_INSTALL:-0}" == "1" && "${INTERNET_CHECK_PASSED:-0}" == "1" ]]; then
+        return 0
+    fi
+
     info "Проверка интернет-соединения..."
-    if ! ping -c 1 8.8.8.8 &> /dev/null; then
-        error "Нет интернет-соединения"
+    if ! ping -c 1 -W 2 8.8.8.8 &>/dev/null; then
+        error "Нет доступа к интернету"
         return 1
+    fi
+    if [[ "${BULK_INSTALL:-0}" == "1" ]]; then
+        INTERNET_CHECK_PASSED=1
     fi
     log "Интернет-соединение проверено"
     return 0
@@ -74,8 +81,12 @@ is_yes() {
 
 confirm_yes_no() {
     local prompt="$1"
+    local default="${2:-no}"
     local answer
-    read -rp "${PROMPT_PREFIX} ${prompt} " answer
+
+    [[ "${BULK_INSTALL:-0}" == "1" ]] && return 0
+    read -rp "${PROMPT_PREFIX} ${prompt} " answer || return 1
+    [[ "$default" == "yes" && -z "$answer" ]] && return 0
     is_yes "$answer"
 }
 
@@ -139,14 +150,12 @@ write_file_atomically() {
 
     temp_file="$(mktemp "${target}.XXXXXX")" || return 1
     if ! cat > "$temp_file"; then
-        rm -f -- "$temp_file"
-        error "Failed to write temporary file for $target"
+        error "Не удалось записать временный файл для $target"
         return 1
     fi
 
     if ! chmod "$mode" "$temp_file" || ! mv -f -- "$temp_file" "$target"; then
-        rm -f -- "$temp_file"
-        error "Failed to install file $target"
+        error "Не удалось установить файл $target"
         return 1
     fi
 }

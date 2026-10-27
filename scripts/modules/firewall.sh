@@ -270,12 +270,12 @@ EOF
     fi
 
     fail2ban-client status sshd >/dev/null 2>&1 || {
-        error "Jail sshd не активирован"
+        error "Правило sshd не активировано"
         return 1
     }
 
     fail2ban-client status sshd-ddos >/dev/null 2>&1 || {
-        error "Jail sshd-ddos не активирован"
+        error "Правило sshd-ddos не активировано"
         return 1
     }
 

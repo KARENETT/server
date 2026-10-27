@@ -33,10 +33,7 @@ setup_swap() {
     [ "$swap_size_mb" -gt 4096 ] && swap_size_mb=4096
 
     info "$(t swap_will_create): ${swap_size_mb}MB"
-    echo ""
-    read -rp "${PROMPT_PREFIX} $(t swap_confirm) " -n 1
-    echo ""
-    if [[ $REPLY =~ ^[Nn]$ ]]; then
+    if ! confirm_yes_no "$(t swap_confirm)" yes; then
         warning "$(t swap_cancelled)"
         return 0
     fi

@@ -10,12 +10,12 @@ setup_trafficguard() {
         return 1
     fi
 
-    if ! confirm_yes_no "$(t remote_install_confirm) TrafficGuard? (y/N):"; then
+    if ! confirm_yes_no "$(t remote_install_confirm) TrafficGuard? [да/нет; по умолчанию — нет]"; then
         warning "$(t remote_install_cancelled)"
         return 0
     fi
 
-    info "URL: https://raw.githubusercontent.com/KARENETT/TrafficGuard-auto/refs/heads/main/install-trafficguard.sh"
+    info "Адрес установщика: https://raw.githubusercontent.com/KARENETT/TrafficGuard-auto/refs/heads/main/install-trafficguard.sh"
     log "Установка защиты от сканеров (TrafficGuard)..."
     if curl -fsSL "https://raw.githubusercontent.com/KARENETT/TrafficGuard-auto/refs/heads/main/install-trafficguard.sh" | bash; then
         check_success "TrafficGuard установлен"

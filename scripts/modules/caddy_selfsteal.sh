@@ -89,6 +89,8 @@ EOF
 
 render_selfsteal_compose() {
     cat <<'EOF'
+name: remnanode-web
+
 services:
   caddy:
     image: caddy:2-alpine
@@ -123,15 +125,22 @@ volumes:
 EOF
 }
 
+selfsteal_template_asset() {
+    case "${1:-}" in
+        1) printf '%s\n' "$SCRIPTS_DIR/assets/selfsteal/index.html" ;;
+        2) printf '%s\n' "$SCRIPTS_DIR/assets/selfsteal/speedtest/index.html" ;;
+        *) return 1 ;;
+    esac
+}
+
 selfsteal_restore_previous_services() {
-    local compose_file="$1"
-    local web_dir="$2"
-    local system_caddy_active="$3"
-    local system_caddy_enabled="$4"
-    shift 4
+    local web_dir="$1"
+    local system_caddy_active="$2"
+    local system_caddy_enabled="$3"
+    shift 3
     local container
 
-    docker compose -p remnanode-web --project-directory "$web_dir" -f "$compose_file" stop caddy nginx >/dev/null 2>&1 || true
+    (cd "$web_dir" && docker compose stop caddy nginx) >/dev/null 2>&1 || true
     for container in "$@"; do
         docker start "$container" >/dev/null 2>&1 || warning "$(t caddy_rollback_failed)"
     done
@@ -158,13 +167,13 @@ selfsteal_rollback_setup_config() {
 setup_caddy_selfsteal() {
     local raw_domain=""
     local xhttp_domain=""
-    local asset_path="$SCRIPTS_DIR/assets/selfsteal/index.html"
+    local asset_path=""
+    local template_choice="1"
     local web_dir="$REMNANODE_DIR/web"
     local caddy_dir="$REMNANODE_DIR/web/caddy"
     local nginx_dir="$REMNANODE_DIR/web/nginx"
     local site_dir="$REMNANODE_DIR/web/site"
     local compose_file="$REMNANODE_DIR/web/docker-compose.yml"
-    local -a compose_project=()
     local container_name
     local container_ports
     local container_project
@@ -210,10 +219,6 @@ setup_caddy_selfsteal() {
         return 1
     fi
 
-    if [[ ! -f "$asset_path" ]]; then
-        error "$(t caddy_asset_missing)"
-        return 1
-    fi
 
     info "$(t caddy_dns_notice)"
     info "$(t caddy_ports_notice)"
@@ -236,6 +241,25 @@ setup_caddy_selfsteal() {
     done
     raw_domain="${raw_domain,,}"
     xhttp_domain="${xhttp_domain,,}"
+    if [[ ! -f "$site_dir/index.html" ]]; then
+        info "$(t caddy_template_prompt)"
+        printf '  1) %s\n' "$(t caddy_template_veilstore)"
+        printf '  2) %s\n' "$(t caddy_template_speedtest)"
+        while true; do
+            read -rp "${PROMPT_PREFIX} $(t caddy_template_choice_prompt) " template_choice || return 1
+            template_choice="${template_choice:-1}"
+            if asset_path="$(selfsteal_template_asset "$template_choice")"; then
+                break
+            fi
+            warning "$(t caddy_template_invalid)"
+        done
+        if [[ ! -f "$asset_path" ]]; then
+            error "$(t caddy_asset_missing)"
+            return 1
+        fi
+    else
+        info "$(t caddy_site_preserved)"
+    fi
 
     install -d -o root -g root -m 755 "$caddy_dir" "$nginx_dir" "$site_dir"
     stage_dir="$(mktemp -d "$web_dir/.setup.XXXXXX")" || {
@@ -280,7 +304,6 @@ setup_caddy_selfsteal() {
         return 1
     fi
 
-    compose_project=(docker compose -p remnanode-web --project-directory "$web_dir" -f "$compose_file")
     if ! selfsteal_validate_config; then
         selfsteal_rollback_setup_config "$stage_dir" "${config_targets[@]}" || true
         return 1
@@ -354,7 +377,7 @@ setup_caddy_selfsteal() {
         container_running="$(docker inspect --format '{{.State.Running}}' "$container_name" 2>/dev/null || true)"
         [[ "$container_running" == "true" ]] || continue
         if ! docker stop "$container_name" >/dev/null; then
-            selfsteal_restore_previous_services "$compose_file" "$web_dir" "$system_caddy_active" "$system_caddy_enabled" "${stopped_containers[@]}"
+            selfsteal_restore_previous_services "$web_dir" "$system_caddy_active" "$system_caddy_enabled" "${stopped_containers[@]}"
             selfsteal_rollback_setup_config "$stage_dir" "${config_targets[@]}" || true
             error "$(t caddy_conflict_stop_failed)"
             return 1
@@ -362,8 +385,8 @@ setup_caddy_selfsteal() {
         stopped_containers+=("$container_name")
     done
 
-    if ! "${compose_project[@]}" up -d; then
-        selfsteal_restore_previous_services "$compose_file" "$web_dir" "$system_caddy_active" "$system_caddy_enabled" "${stopped_containers[@]}"
+    if ! selfsteal_compose up -d; then
+        selfsteal_restore_previous_services "$web_dir" "$system_caddy_active" "$system_caddy_enabled" "${stopped_containers[@]}"
         selfsteal_rollback_setup_config "$stage_dir" "${config_targets[@]}" || true
         error "$(t caddy_compose_start_failed)"
         return 1
@@ -373,7 +396,7 @@ setup_caddy_selfsteal() {
     for container_name in caddy nginx; do
         container_running="$(docker inspect --format '{{.State.Running}}' "$container_name" 2>/dev/null || true)"
         if [[ "$container_running" != "true" ]]; then
-            selfsteal_restore_previous_services "$compose_file" "$web_dir" "$system_caddy_active" "$system_caddy_enabled" "${stopped_containers[@]}"
+            selfsteal_restore_previous_services "$web_dir" "$system_caddy_active" "$system_caddy_enabled" "${stopped_containers[@]}"
             selfsteal_rollback_setup_config "$stage_dir" "${config_targets[@]}" || true
             error "$(t caddy_compose_start_failed)"
             return 1
@@ -383,7 +406,7 @@ setup_caddy_selfsteal() {
     caddy_listener="$(ss -lntH 'sport = :9443' 2>/dev/null || true)"
     nginx_listener="$(ss -lntH 'sport = :443' 2>/dev/null || true)"
     if [[ -z "$caddy_listener" || -z "$nginx_listener" ]]; then
-        selfsteal_restore_previous_services "$compose_file" "$web_dir" "$system_caddy_active" "$system_caddy_enabled" "${stopped_containers[@]}"
+        selfsteal_restore_previous_services "$web_dir" "$system_caddy_active" "$system_caddy_enabled" "${stopped_containers[@]}"
         selfsteal_rollback_setup_config "$stage_dir" "${config_targets[@]}" || true
         error "$(t caddy_listener_check_failed)"
         return 1
@@ -392,7 +415,7 @@ setup_caddy_selfsteal() {
     for domain in "$raw_domain" "$xhttp_domain"; do
         http_status="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 3 --max-time 5 -H "Host: $domain" http://127.0.0.1/ 2>/dev/null || true)"
         if [[ "$http_status" != "301" ]]; then
-            selfsteal_restore_previous_services "$compose_file" "$web_dir" "$system_caddy_active" "$system_caddy_enabled" "${stopped_containers[@]}"
+            selfsteal_restore_previous_services "$web_dir" "$system_caddy_active" "$system_caddy_enabled" "${stopped_containers[@]}"
             selfsteal_rollback_setup_config "$stage_dir" "${config_targets[@]}" || true
             error "$(t caddy_http_smoke_failed)"
             return 1
@@ -406,9 +429,10 @@ setup_caddy_selfsteal() {
 }
 selfsteal_compose() {
     local web_dir="$REMNANODE_DIR/web"
-    docker compose -p remnanode-web \
-        --project-directory "$web_dir" \
-        -f "$web_dir/docker-compose.yml" "$@"
+    (
+        cd "$web_dir" || exit 1
+        docker compose "$@"
+    )
 }
 
 selfsteal_service_state() {
@@ -462,7 +486,7 @@ selfsteal_read_certificate() {
 
     command -v openssl >/dev/null 2>&1 || return 1
     command -v timeout >/dev/null 2>&1 || return 1
-    timeout 2 openssl s_client \
+    timeout 1 openssl s_client \
         -connect 127.0.0.1:9443 \
         -servername "$domain" \
         -showcerts </dev/null 2>/dev/null |
@@ -515,10 +539,9 @@ selfsteal_container_state_label() {
 }
 
 selfsteal_print_status() {
+    local state="${1:-}" raw_domain xhttp_domain caddy_state nginx_state
 
-    local state raw_domain xhttp_domain caddy_state nginx_state
-
-    state="$(selfsteal_service_state)"
+    [[ -n "$state" ]] || state="$(selfsteal_service_state)"
     printf '  %s %s\n' "$(t selfsteal_state_label)" "$(t "selfsteal_state_${state}")"
     [[ "$state" != "missing" && "$state" != "unavailable" ]] || return 0
 
@@ -542,7 +565,6 @@ selfsteal_print_status() {
     printf '  %s %s / %s\n' "$(t selfsteal_containers_label)" \
         "$(selfsteal_container_state_label "$caddy_state")" \
         "$(selfsteal_container_state_label "$nginx_state")"
-
 }
 
 selfsteal_print_certificate_details() {
