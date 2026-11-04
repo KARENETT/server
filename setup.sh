@@ -792,6 +792,7 @@ show_selfsteal_menu() {
             echo -e "${MAGENTA}$(t category_manage)${NC}"
             echo -e " ${GREEN}3.${NC} $(t opt_selfsteal_stop)"
             echo -e " ${GREEN}4.${NC} $(t opt_selfsteal_restart)"
+            echo -e " ${GREEN}9.${NC} $(t opt_selfsteal_change_domains)"
             echo -e "${MAGENTA}$(t category_monitor)${NC}"
             echo -e " ${GREEN}5.${NC} $(t opt_selfsteal_status)"
             echo -e " ${GREEN}6.${NC} $(t opt_selfsteal_logs)"
@@ -804,6 +805,7 @@ show_selfsteal_menu() {
             echo -e " ${GREEN}2.${NC} $(t opt_selfsteal_start)"
             echo -e " ${GREEN}3.${NC} $(t opt_selfsteal_stop)"
             echo -e " ${GREEN}4.${NC} $(t opt_selfsteal_restart)"
+            echo -e " ${GREEN}9.${NC} $(t opt_selfsteal_change_domains)"
             echo -e "${MAGENTA}$(t category_monitor)${NC}"
             echo -e " ${GREEN}5.${NC} $(t opt_selfsteal_status)"
             echo -e " ${GREEN}6.${NC} $(t opt_selfsteal_logs)"
@@ -814,6 +816,7 @@ show_selfsteal_menu() {
         stopped)
             echo -e "${MAGENTA}$(t category_manage)${NC}"
             echo -e " ${GREEN}2.${NC} $(t opt_selfsteal_start)"
+            echo -e " ${GREEN}9.${NC} $(t opt_selfsteal_change_domains)"
             echo -e "${MAGENTA}$(t category_monitor)${NC}"
             echo -e " ${GREEN}5.${NC} $(t opt_selfsteal_status)"
             echo -e " ${GREEN}6.${NC} $(t opt_selfsteal_logs)"
@@ -845,6 +848,7 @@ selfsteal_settings_menu() {
             6) run_menu_action_and_pause selfsteal_logs || return 1 ;;
             7) run_menu_action_and_pause selfsteal_validate_config || return 1 ;;
             8) run_menu_action_and_pause selfsteal_print_certificate_details || return 1 ;;
+            9) run_menu_action_and_pause selfsteal_change_domains || return 1 ;;
             0) return 0 ;;
             *) error "$(t invalid_choice)" || true; read -rp "${PROMPT_PREFIX} $(t press_enter)" || return 1 ;;
         esac

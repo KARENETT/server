@@ -651,6 +651,115 @@ selfsteal_verify_running() {
     done
 }
 
+selfsteal_change_domains() {
+    local state="" old_raw_domain="" old_xhttp_domain=""
+    local raw_domain="" xhttp_domain="" raw_input="" xhttp_input=""
+    local web_dir="$REMNANODE_DIR/web" stage_dir=""
+    local config_conflict=0 config_index
+    local -a config_targets=() config_candidates=()
+
+    state="$(selfsteal_service_state)"
+    if [[ "$state" == "missing" ]]; then
+        error "$(t selfsteal_not_installed)"
+        return 1
+    fi
+    if [[ "$state" == "unavailable" ]]; then
+        error "$(t caddy_docker_daemon_required)"
+        return 1
+    fi
+
+    selfsteal_read_domains old_raw_domain old_xhttp_domain
+    if [[ -z "$old_raw_domain" || -z "$old_xhttp_domain" ]]; then
+        error "$(t selfsteal_domains_read_failed)"
+        return 1
+    fi
+
+    info "$(t caddy_dns_notice)"
+    info "$(t selfsteal_domain_panel_notice)"
+    while true; do
+        read -rp "${PROMPT_PREFIX} $(t selfsteal_raw_domain_change_prompt) [$old_raw_domain]: " raw_input || return 1
+        raw_domain="${raw_input:-$old_raw_domain}"
+        if is_valid_selfsteal_domain "$raw_domain"; then
+            raw_domain="${raw_domain,,}"
+            break
+        fi
+        warning "$(t caddy_domain_invalid)"
+    done
+    while true; do
+        read -rp "${PROMPT_PREFIX} $(t selfsteal_xhttp_domain_change_prompt) [$old_xhttp_domain]: " xhttp_input || return 1
+        xhttp_domain="${xhttp_input:-$old_xhttp_domain}"
+        if ! is_valid_selfsteal_domain "$xhttp_domain"; then
+            warning "$(t caddy_domain_invalid)"
+        elif [[ "$raw_domain" == "${xhttp_domain,,}" ]]; then
+            warning "$(t caddy_domains_must_differ)"
+        else
+            xhttp_domain="${xhttp_domain,,}"
+            break
+        fi
+    done
+
+    if [[ "$raw_domain" == "${old_raw_domain,,}" && "$xhttp_domain" == "${old_xhttp_domain,,}" ]]; then
+        info "$(t selfsteal_domains_unchanged)"
+        return 0
+    fi
+
+    stage_dir="$(mktemp -d "$web_dir/.domains.XXXXXX")" || {
+        error "$(t caddy_stage_failed)"
+        return 1
+    }
+    config_targets=("$web_dir/caddy/Caddyfile" "$web_dir/nginx/nginx.conf")
+    config_candidates=("$stage_dir/Caddyfile" "$stage_dir/nginx.conf")
+    if ! render_selfsteal_caddyfile "$raw_domain" "$xhttp_domain" > "${config_candidates[0]}" ||
+        ! render_selfsteal_nginx_conf "$raw_domain" "$xhttp_domain" > "${config_candidates[1]}"; then
+        rm -rf -- "$stage_dir"
+        error "$(t caddy_stage_failed)"
+        return 1
+    fi
+
+    for config_index in "${!config_targets[@]}"; do
+        if ! managed_file_is_safe "${config_targets[$config_index]}" "${config_candidates[$config_index]}"; then
+            config_conflict=1
+            managed_file_save_candidate "${config_targets[$config_index]}" "${config_candidates[$config_index]}" 644 || true
+        fi
+    done
+    if (( config_conflict )); then
+        rm -rf -- "$stage_dir"
+        error "$(t managed_config_manual_abort)"
+        return 1
+    fi
+    if ! managed_files_snapshot "$stage_dir/backup" "${config_targets[@]}"; then
+        rm -rf -- "$stage_dir"
+        error "$(t caddy_backup_failed)"
+        return 1
+    fi
+    for config_index in "${!config_targets[@]}"; do
+        if ! managed_file_commit "${config_targets[$config_index]}" 644 "${config_candidates[$config_index]}"; then
+            selfsteal_rollback_setup_config "$stage_dir" "${config_targets[@]}" || true
+            error "$(t caddy_config_write_failed)"
+            return 1
+        fi
+    done
+
+    if [[ "$state" == "stopped" ]]; then
+        if ! selfsteal_validate_config; then
+            selfsteal_rollback_setup_config "$stage_dir" "${config_targets[@]}" || true
+            return 1
+        fi
+    elif ! selfsteal_restart; then
+        if selfsteal_rollback_setup_config "$stage_dir" "${config_targets[@]}"; then
+            selfsteal_restart || warning "$(t caddy_rollback_failed)"
+        fi
+        return 1
+    fi
+
+    rm -rf -- "$stage_dir"
+    if [[ "$state" == "stopped" ]]; then
+        info "$(t selfsteal_domains_saved_stopped)"
+    else
+        log "$(t selfsteal_domains_changed)"
+    fi
+}
+
 selfsteal_start() {
     local state
     state="$(selfsteal_service_state)"

@@ -30,7 +30,7 @@ translate_ru() {
         opt_back) echo "Назад в главное меню" ;;
         choose_server_item) echo "Выберите настройку [0-20, 0 — назад]:" ;;
         choose_remnanode_item) echo "Выберите действие [0-7, 0 — назад]:" ;;
-        choose_selfsteal_item) echo "Выберите действие [0-8, 0 — назад]:" ;;
+        choose_selfsteal_item) echo "Выберите действие [0-9, 0 — назад]:" ;;
 
         opt_1) echo "Установить все настройки сервера автоматически" ;;
         opt_2) echo "Выборочная установка" ;;
@@ -103,6 +103,9 @@ translate_ru() {
         caddy_xhttp_domain_prompt) echo "Введите второй домен для XHTTP (например, xhttp.example.com):" ;;
         caddy_domain_invalid) echo "Некорректный домен. Введите полное доменное имя без схемы и порта." ;;
         caddy_domains_must_differ) echo "Домены raw и XHTTP должны отличаться." ;;
+        selfsteal_raw_domain_change_prompt) echo "Введите новый домен RAW (Enter — оставить текущий)" ;;
+        selfsteal_xhttp_domain_change_prompt) echo "Введите новый домен XHTTP (Enter — оставить текущий)" ;;
+        selfsteal_domain_panel_notice) echo "После смены отдельно обновите соответствующие Host/SNI в профиле RemnaNode." ;;
         caddy_docker_required) echo "Для установки нужен Docker Compose v2 (пункт 14)." ;;
         caddy_docker_daemon_required) echo "Демон Docker не запущен или недоступен." ;;
         caddy_validation_tools_required) echo "Для проверки портов нужна команда ss из пакета iproute2." ;;
@@ -286,6 +289,7 @@ translate_ru() {
         opt_selfsteal_logs) echo "Последние логи Caddy и NGINX" ;;
         opt_selfsteal_validate) echo "Проверить Compose, Caddyfile и nginx.conf" ;;
         opt_selfsteal_cert) echo "Подробная информация о сертификатах" ;;
+        opt_selfsteal_change_domains) echo "Изменить домены RAW и XHTTP" ;;
         managed_config_candidate_failed) echo "Не удалось сохранить новый вариант конфигурации:" ;;
         managed_config_modified) echo "Обнаружены ручные изменения конфигурации; файл не перезаписан:" ;;
         managed_config_candidate_saved) echo "Новый вариант сохранён:" ;;
@@ -330,6 +334,10 @@ translate_ru() {
         selfsteal_xhttp_domain_label) echo "Домен XHTTP:" ;;
         selfsteal_ports_label) echo "Порты:" ;;
         selfsteal_ports_value) echo "NGINX 443/tcp; Caddy 127.0.0.1:9443; HTTP 80/tcp" ;;
+        selfsteal_domains_read_failed) echo "Не удалось определить текущие домены из nginx.conf." ;;
+        selfsteal_domains_unchanged) echo "Домены не изменены." ;;
+        selfsteal_domains_saved_stopped) echo "Домены сохранены; изменения применятся после запуска self-steal." ;;
+        selfsteal_domains_changed) echo "Домены self-steal обновлены." ;;
         selfsteal_containers_label) echo "Контейнеры Caddy / NGINX:" ;;
         selfsteal_ssl_label) echo "SSL:" ;;
         selfsteal_ssl_unavailable) echo "сертификат недоступен" ;;
