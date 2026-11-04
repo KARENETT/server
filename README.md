@@ -83,7 +83,7 @@ sudo karenet-setup
 |:--|:--|
 | System | Базовые системные пакеты, user/system tweaks |
 | Network | sysctl hardening, BBR, network tuning, Caddy/Nginx self-steal, Psiphon |
-| Security | SSH, firewall (в том числе ограничение порта RemnaNode IP панели), fail2ban, trafficguard, блокировка торрентов через ds-guard |
+| Security | SSH, firewall (в том числе ограничение порта RemnaNode IP панели), fail2ban, trafficguard, опциональная блокировка торрентов через ds-guard |
 | Runtime | Docker, Node.js, uv, ZSH, XanMod, WARP Native |
 
 ## 🔐 RemnaNode и self-steal

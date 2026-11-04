@@ -13,14 +13,14 @@ is_ds_guard_installed() {
 setup_ds_guard() {
     local tmp_dir ds_guard_bin
 
+    if ! confirm_yes_no "$(t ds_guard_confirm)" "no" "yes"; then
+        warning "$(t remote_install_cancelled)"
+        return 0
+    fi
+
     if ! command -v curl >/dev/null 2>&1; then
         error "$(t curl_not_found)"
         return 1
-    fi
-
-    if ! confirm_yes_no "$(t remote_install_confirm) ds-guard? [да/нет; по умолчанию — нет]"; then
-        warning "$(t remote_install_cancelled)"
-        return 0
     fi
 
     tmp_dir="$(mktemp -d /tmp/ds-guard.XXXXXX)" || return 1

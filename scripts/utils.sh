@@ -82,9 +82,10 @@ is_yes() {
 confirm_yes_no() {
     local prompt="$1"
     local default="${2:-no}"
+    local ask_in_bulk="${3:-no}"
     local answer
 
-    [[ "${BULK_INSTALL:-0}" == "1" ]] && return 0
+    [[ "${BULK_INSTALL:-0}" == "1" && "$ask_in_bulk" != "yes" ]] && return 0
     read -rp "${PROMPT_PREFIX} ${prompt} " answer || return 1
     [[ "$default" == "yes" && -z "$answer" ]] && return 0
     is_yes "$answer"
